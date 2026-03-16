@@ -3,42 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AutoLog V13.2 - BARCODE</title>
+    <title>AutoLog V13.3 - VIN Barcode</title>
     
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
     <style>
-        :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --accent: #BF5AF2; }
+        :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --accent: #30D158; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; }
         .screen { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; flex-direction: column; }
         .active { display: flex; }
         .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; }
-        .btn-scanner { background: var(--accent); }
+        .btn-scanner { background: var(--accent); color: black; }
+        #reader { width: 100%; border-radius: 20px; overflow: hidden; background: #111; border: 2px solid var(--gray); min-height: 300px; }
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1c1c1e; color: white; font-size: 16px; box-sizing: border-box; }
-        
-        /* Ajuste del lector para códigos largos de VIN */
-        #reader { 
-            width: 100%; 
-            border-radius: 20px; 
-            overflow: hidden; 
-            background: #111; 
-            border: 2px dashed var(--accent); 
-            min-height: 300px;
-        }
-
         .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 140px; overflow-y: auto; }
         .item { background: #333; padding: 14px 0; text-align: center; border-radius: 10px; font-size: 14px; font-weight: bold; }
-        .item.selected { background: var(--accent); border: 2px solid white; }
-        
+        .item.selected { background: var(--blue); border: 2px solid white; }
         #final-code { font-size: 38px; font-weight: 800; color: var(--red); text-align: center; padding: 10px; border: 2px solid var(--red); border-radius: 18px; margin: 10px 0; background: #000; }
     </style>
 </head>
 <body>
 
     <div id="scr-home" class="screen active">
-        <h1 style="margin-top: 40px; color: var(--accent);">AutoLog V13.2</h1>
-        <p style="color: var(--gray);">Escáner de Barras VIN</p>
-        <button class="btn btn-scanner" onclick="ir('scr-setup')">+ Iniciar Nueva Carga</button>
+        <h1 style="margin-top: 40px;">AutoLog V13.3</h1>
+        <p style="color: var(--gray);">Escáner de Barras Alta Precisión</p>
+        <button class="btn" onclick="ir('scr-setup')">+ Iniciar Nueva Carga</button>
     </div>
 
     <div id="scr-setup" class="screen">
@@ -46,22 +35,24 @@
         <input type="text" id="inspector" placeholder="Inspector">
         <input type="text" id="operador" placeholder="Operador">
         <input type="text" id="eco" placeholder="Número ECO">
-        <button class="btn btn-scanner" onclick="iniciarCarga()">Confirmar</button>
+        <button class="btn btn-scanner" onclick="ir('scr-vin')">Confirmar</button>
     </div>
 
     <div id="scr-vin" class="screen">
-        <h2 style="color: var(--accent)">Escáner de Barras</h2>
+        <h2>Escanear Código VIN</h2>
         <div id="reader"></div>
-        <button id="btn-cam" class="btn btn-scanner" onclick="activarCamara()">📸 ENCENDER CÁMARA</button>
+        <div style="display: flex; gap: 10px;">
+            <button id="btn-cam" class="btn btn-scanner" onclick="activarCamara()">ENCENDER CÁMARA</button>
+        </div>
         <input type="text" id="vin-input" placeholder="VIN detectado aparecerá aquí">
-        <button class="btn" onclick="ir('scr-inspect')">Siguiente</button>
+        <button class="btn" onclick="ir('scr-inspect')">Continuar</button>
     </div>
 
     <div id="scr-inspect" class="screen">
         <div id="final-code">00-00-0</div>
         <div class="grid" id="grid-p"></div><div class="grid" id="grid-d"></div><div class="grid" id="grid-s"></div>
-        <button class="btn btn-scanner" onclick="guardarDano()">➕ Guardar</button>
-        <button class="btn" style="background:#222" onclick="siguienteVin()">🏁 Siguiente Auto</button>
+        <button class="btn btn-scanner" onclick="alert('Guardado localmente')">➕ Guardar</button>
+        <button class="btn" style="background:#222" onclick="location.reload()">🏁 Finalizar Todo</button>
     </div>
 
     <script>
@@ -74,33 +65,38 @@
             if(id === 'scr-inspect') generarGrillas();
         }
 
-        function iniciarCarga() { ir('scr-vin'); }
-
-        function activarCamara() {
+        async function activarCamara() {
             if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             
-            // CONFIGURACIÓN PARA VIN (CÓDIGO 128 / 1D)
             const config = { 
                 fps: 20, 
-                qrbox: (viewfinderWidth, viewfinderHeight) => {
-                    // Hacemos el cuadro de escaneo muy ancho para que quepa el VIN
-                    return { width: viewfinderWidth * 0.9, height: 150 };
-                },
-                aspectRatio: 1.0
+                qrbox: { width: 300, height: 120 },
+                aspectRatio: 1.0,
+                // Forzamos a que busque formatos de barras (1D) comunes en autos
+                formatsToSupport: [ 
+                    Html5QrcodeSupportedFormats.CODE_128, 
+                    Html5QrcodeSupportedFormats.CODE_39,
+                    Html5QrcodeSupportedFormats.I25
+                ]
             };
             
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                config, 
-                (decodedText) => {
-                    document.getElementById('vin-input').value = decodedText.toUpperCase();
-                    if(navigator.vibrate) navigator.vibrate(100);
-                    alert("✅ Detectado: " + decodedText);
-                    // No detenemos la cámara automáticamente para que el usuario vea el resultado
-                }
-            ).catch(err => alert("Error: " + err));
-            
-            document.getElementById('btn-cam').style.display = 'none';
+            try {
+                await html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    config, 
+                    (decodedText) => {
+                        document.getElementById('vin-input').value = decodedText.toUpperCase();
+                        if(navigator.vibrate) navigator.vibrate(100);
+                        // Intentamos encender la linterna si está disponible para mejorar lectura
+                        html5QrCode.applyVideoConstraints({
+                            advanced: [{torch: true}]
+                        }).catch(() => {});
+                    }
+                );
+                document.getElementById('btn-cam').style.display = 'none';
+            } catch (err) {
+                alert("Error al iniciar cámara: " + err);
+            }
         }
 
         function generarGrillas() {
@@ -117,16 +113,6 @@
             r('grid-s', 6, v => { s = v; act(); });
         }
         function act() { document.getElementById('final-code').innerText = `${p}-${d}-${s}`; }
-
-        function guardarDano() {
-            alert("Guardado Localmente");
-            p="00"; d="00"; s="0"; act(); generarGrillas();
-        }
-
-        function siguienteVin() {
-            document.getElementById('vin-input').value = "";
-            ir('scr-vin');
-        }
     </script>
 </body>
 </html>
