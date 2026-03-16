@@ -3,94 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AutoLog Free V11</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>AutoLog V12 - Offline</title>
+    
+    <link rel="manifest" href="manifest.json">
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    
     <style>
         :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --green: #32D74B; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         .screen { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; flex-direction: column; }
         .active { display: flex; }
         .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; }
         .btn-cancel { background: #333; color: var(--red); }
         .btn-back { background: transparent; color: var(--blue); width: auto; padding: 10px 0; font-weight: bold; border:none; }
         input, textarea { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1c1c1e; color: white; font-size: 16px; box-sizing: border-box; }
-        #final-code { font-size: 38px; font-weight: 800; color: var(--red); text-align: center; padding: 15px; border: 2px solid var(--red); border-radius: 18px; margin: 15px 0; background: #000; }
-        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 160px; overflow-y: auto; }
+        textarea { resize: none; height: 70px; border: 1px dashed var(--gray); }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 150px; overflow-y: auto; }
         .item { background: #333; padding: 14px 0; text-align: center; border-radius: 10px; font-size: 14px; }
         .item.selected { background: var(--blue); border: 2px solid white; }
+        #final-code { font-size: 38px; font-weight: 800; color: var(--red); text-align: center; padding: 10px; border: 2px solid var(--red); border-radius: 18px; margin: 10px 0; background: #000; }
         .load-card { background: var(--card); padding: 18px; border-radius: 22px; margin-bottom: 15px; border-left: 6px solid var(--blue); }
-        .comment-box { display: none; background: #2c2c2e; padding: 10px; border-radius: 10px; margin-top: 8px; font-size: 13px; color: #ccc; font-style: italic; border-left: 3px solid var(--blue); }
+        .vin-header { color: var(--blue); font-weight: 700; border-top: 1px solid #333; padding-top: 10px; margin-top: 10px; font-size: 14px; }
+        .damage-line { padding: 8px 0; border-bottom: 1px solid #2c2c2e; }
+        .code-row { display: flex; justify-content: space-between; align-items: center; }
+        .comment-box { display: none; background: #2c2c2e; padding: 10px; border-radius: 10px; margin-top: 5px; font-size: 12px; font-style: italic; color: #ccc; border-left: 3px solid var(--blue); }
+        #proc-canvas { display: none; }
     </style>
 </head>
 <body>
+    <canvas id="proc-canvas"></canvas>
 
     <div id="scr-home" class="screen active">
-        <h1 style="margin-top: 40px;">AutoLog V11</h1>
-        <p style="color: var(--gray);">Versión 100% Gratuita</p>
+        <h1 style="margin-top: 40px;">AutoLog V12</h1>
+        <p style="color: var(--gray);">Listo para trabajar sin internet</p>
         <div style="margin-top: auto;">
-            <button class="btn" onclick="nuevaOperacion()">+ Iniciar Nueva Carga</button>
-            <button class="btn btn-cancel" style="color:white" onclick="ir('scr-historial')">🔍 Ver Historial</button>
+            <button class="btn" onclick="prepararNuevaCarga()">+ Iniciar Nueva Carga</button>
+            <button class="btn btn-cancel" style="color:white" onclick="ir('scr-history')">🔍 Historial Local</button>
         </div>
     </div>
 
-    <div id="pin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center;">
+    <div id="pin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:100; align-items:center; justify-content:center;">
         <div style="background:var(--card); padding:30px; border-radius:25px; width:80%; text-align:center;">
-            <h3>Seguridad</h3>
-            <input type="tel" id="pin-input" placeholder="PIN" style="text-align:center; font-size:30px;">
+            <h3>PIN Acceso</h3>
+            <input type="tel" id="pin-input" placeholder="****" style="text-align:center; font-size:32px;">
             <button class="btn" onclick="validarPin()">Entrar</button>
             <button class="btn btn-cancel" onclick="document.getElementById('pin-modal').style.display='none'">Cerrar</button>
         </div>
     </div>
 
     <div id="scr-setup" class="screen">
-        <button class="btn-back" onclick="ir('scr-home')">← Cancelar</button>
-        <h2>Configuración</h2>
+        <button class="btn-back" onclick="confirmarSalida('scr-home')">← Cancelar</button>
+        <h2>Nueva Operación</h2>
         <input type="text" id="inspector" placeholder="Inspector">
         <input type="text" id="operador" placeholder="Operador">
-        <input type="text" id="eco" placeholder="Número de ECO">
-        <button class="btn" onclick="iniciarCarga()">Confirmar</button>
+        <input type="text" id="eco" placeholder="Número ECO">
+        <button class="btn" onclick="iniciarCarga()">Confirmar Carga</button>
     </div>
 
     <div id="scr-vin" class="screen">
-        <button class="btn-back" onclick="ir('scr-home')">← Finalizar Carga</button>
-        <h2 id="info-carga-vin" style="font-size:12px; color:var(--gray)"></h2>
-        <h2>VIN del Auto</h2>
-        <p style="font-size:12px; color:var(--blue)">Sugerencia: Usa el escáner del teclado de tu iPhone para mayor precisión.</p>
-        <input type="file" accept="image/*" capture="camera" onchange="escanearGratis(this)">
-        <p id="status-ocr" style="font-size:12px; color:var(--green); text-align:center;"></p>
-        <input type="text" id="vin-input" placeholder="VIN (17 caracteres)" autocomplete="off" spellcheck="false">
-        <button class="btn" onclick="abrirInspeccion()">Siguiente: Daños</button>
+        <button class="btn-back" onclick="confirmarSalida('scr-home')">← Finalizar Sesión</button>
+        <div id="badge-info" style="font-size:11px; color:var(--gray); margin-bottom:10px;"></div>
+        <h2>Captura de VIN</h2>
+        <input type="file" accept="image/*" capture="camera">
+        <input type="text" id="vin-input" placeholder="VIN (17 caracteres)">
+        <button class="btn" onclick="abrirInspeccion()">Capturar Daños</button>
     </div>
 
-    <div id="scr-inspeccion" class="screen">
-        <button class="btn-back" onclick="ir('scr-vin')">← Volver al VIN</button>
-        <p>Panel:</p><div class="grid" id="g-p"></div>
-        <p>Daño:</p><div class="grid" id="g-d"></div>
-        <p>Severidad:</p><div class="grid" id="g-s"></div>
+    <div id="scr-inspect" class="screen">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <button class="btn-back" onclick="ir('scr-vin')">← Volver al VIN</button>
+            <span id="vin-display" style="font-size:12px; color:var(--gray)"></span>
+        </div>
+        <p>1. Panel:</p><div class="grid" id="grid-p"></div>
+        <p>2. Daño:</p><div class="grid" id="grid-d"></div>
+        <p>3. Severidad:</p><div class="grid" id="grid-s"></div>
         <div id="final-code">00-00-0</div>
         <textarea id="comentarios" placeholder="Notas adicionales..."></textarea>
-        <button class="btn" style="background:var(--green)" onclick="guardarDano(false)">➕ Guardar y seguir en este VIN</button>
-        <button class="btn" style="background:#222; border:1px solid var(--blue)" onclick="finalizarVin()">🏁 Siguiente Auto</button>
+        <button class="btn" style="background:var(--green)" onclick="guardarDano(false)">➕ Guardar y seguir en VIN</button>
+        <button class="btn" style="background:#222; border:1px solid var(--blue)" onclick="finalizarEsteVin()">🏁 Siguiente Auto</button>
     </div>
 
-    <div id="scr-historial" class="screen">
+    <div id="scr-history" class="screen">
         <button class="btn-back" onclick="ir('scr-home')">← Inicio</button>
         <h2>Cargas Guardadas</h2>
+        <input type="text" id="buscador" placeholder="Buscar ECO..." onkeyup="mostrarHistorial()">
         <div id="lista-cargas"></div>
     </div>
 
     <script>
+        // REGISTRO DE SERVICE WORKER PARA MODO OFFLINE
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(reg => {
+                    console.log('Modo Offline Activo', reg.scope);
+                });
+            });
+        }
+
         let p="00", d="00", s="0";
         let carga = { insp: "", op: "", eco: "" };
 
         function ir(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'scr-inspeccion') cargarGrillas();
-            if(id === 'scr-historial') mostrarHistorial();
+            if(id === 'scr-inspect') generarGrillas();
+            if(id === 'scr-history') mostrarHistorial();
+            if(id === 'scr-vin') {
+                document.getElementById('badge-info').innerText = `ECO: ${carga.eco} | Insp: ${carga.insp}`;
+            }
         }
 
-        function nuevaOperacion() {
+        function prepararNuevaCarga() {
             document.getElementById('pin-input').value = "";
             document.getElementById('pin-modal').style.display = 'flex';
         }
@@ -99,43 +124,26 @@
             if(document.getElementById('pin-input').value === '678') {
                 document.getElementById('pin-modal').style.display = 'none';
                 ir('scr-setup');
-            } else { alert("Error"); }
+            } else { alert("PIN Incorrecto"); }
         }
 
         function iniciarCarga() {
             carga.insp = document.getElementById('inspector').value;
             carga.op = document.getElementById('operador').value;
             carga.eco = document.getElementById('eco').value;
-            document.getElementById('info-carga-vin').innerText = `ECO: ${carga.eco} | Insp: ${carga.insp}`;
+            if(!carga.eco || !carga.op) return alert("Faltan datos");
             ir('scr-vin');
         }
 
-        // --- OCR GRATIS MEJORADO ---
-        async function escanearGratis(input) {
-            if(!input.files[0]) return;
-            const st = document.getElementById('status-ocr');
-            st.innerText = "🔍 Analizando... mantén la calma.";
-            
-            try {
-                const worker = await Tesseract.createWorker('eng');
-                await worker.setParameters({
-                    tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-                });
-                const { data: { text } } = await worker.recognize(input.files[0]);
-                const limpio = text.replace(/[^A-Z0-9]/gi, "").substring(0,17).toUpperCase();
-                document.getElementById('vin-input').value = limpio;
-                st.innerText = "✅ Lectura terminada";
-                await worker.terminate();
-            } catch(e) { st.innerText = "❌ Error. Prueba manual."; }
-        }
-
         function abrirInspeccion() {
-            if(!document.getElementById('vin-input').value) return alert("Falta VIN");
-            ir('scr-inspeccion');
+            const v = document.getElementById('vin-input').value;
+            if(!v) return alert("Ingrese VIN");
+            document.getElementById('vin-display').innerText = "VIN: " + v;
+            ir('scr-inspect');
         }
 
-        function cargarGrillas() {
-            const render = (id, max, cb) => {
+        function generarGrillas() {
+            const r = (id, max, cb) => {
                 const el = document.getElementById(id); el.innerHTML = "";
                 for(let i=1; i<=max; i++) {
                     let b = document.createElement('div'); b.className='item'; b.innerText=i;
@@ -143,9 +151,9 @@
                     el.appendChild(b);
                 }
             };
-            render('g-p', 99, v => { p = v.toString().padStart(2,'0'); act(); });
-            render('g-d', 32, v => { d = v.toString().padStart(2,'0'); act(); });
-            render('g-s', 6, v => { s = v; act(); });
+            r('grid-p', 99, v => { p = v.toString().padStart(2,'0'); act(); });
+            r('grid-d', 32, v => { d = v.toString().padStart(2,'0'); act(); });
+            r('grid-s', 6, v => { s = v; act(); });
         }
 
         function act() { document.getElementById('final-code').innerText = `${p}-${d}-${s}`; }
@@ -154,17 +162,17 @@
             const cod = document.getElementById('final-code').innerText;
             if(cod === "00-00-0") return;
             const res = { vin: document.getElementById('vin-input').value, cod: cod, nota: document.getElementById('comentarios').value, sev: parseInt(s) };
-            let db = JSON.parse(localStorage.getItem('autolog_free') || '[]');
+            let db = JSON.parse(localStorage.getItem('autolog_offline_v12') || '[]');
             const hoy = new Date().toLocaleDateString();
             let idx = db.findIndex(h => h.eco === carga.eco && h.fecha === hoy);
             if(idx > -1) db[idx].danos.push(res);
             else db.push({ fecha: hoy, insp: carga.insp, op: carga.op, eco: carga.eco, danos: [res] });
-            localStorage.setItem('autolog_free', JSON.stringify(db));
+            localStorage.setItem('autolog_offline_v12', JSON.stringify(db));
             if(!silencioso) alert("Capturado");
-            p="00"; d="00"; s="0"; document.getElementById('comentarios').value = ""; act(); cargarGrillas();
+            p="00"; d="00"; s="0"; document.getElementById('comentarios').value = ""; act(); generarGrillas();
         }
 
-        function finalizarVin() {
+        function finalizarEsteVin() {
             if(document.getElementById('final-code').innerText !== "00-00-0") guardarDano(true);
             document.getElementById('vin-input').value = "";
             ir('scr-vin');
@@ -172,12 +180,20 @@
 
         function mostrarHistorial() {
             const cont = document.getElementById('lista-cargas'); cont.innerHTML = "";
-            let db = JSON.parse(localStorage.getItem('autolog_free') || '[]');
+            let db = JSON.parse(localStorage.getItem('autolog_offline_v12') || '[]');
             db.reverse().forEach(c => {
-                let htmlD = c.danos.map(d => `<div style="border-bottom:1px solid #333; padding:5px 0;"><b>${d.vin}</b>: <span style="color:var(--red)">${d.cod}</span> ${d.nota ? '*' : ''}</div>`).join('');
-                cont.innerHTML += `<div class="load-card"><b>ECO: ${c.eco}</b> (${c.fecha})<br><small>Op: ${c.op}</small><br>${htmlD}</div>`;
+                let htmlVins = "";
+                const agrupados = {};
+                c.danos.forEach(d => { if(!agrupados[d.vin]) agrupados[d.vin] = []; agrupados[d.vin].push(d); });
+                for(let v in agrupados) {
+                    let dHtml = agrupados[v].map(d => `<div class="damage-line"><b>${d.cod}</b> ${d.nota ? '*' : ''} <small>(S:${d.sev})</small></div>`).join('');
+                    htmlVins += `<div class="vin-header">VIN: ${v}</div>${dHtml}`;
+                }
+                cont.innerHTML += `<div class="load-card"><b>ECO: ${c.eco}</b> | ${c.fecha}<br>${htmlVins}</div>`;
             });
         }
+
+        function confirmarSalida(dest) { if(confirm("¿Desea cerrar esta sesión?")) ir(dest); }
     </script>
 </body>
 </html>
