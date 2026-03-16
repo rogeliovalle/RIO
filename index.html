@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AutoLog V15 - Pro</title>
+    <title>AutoLog V16 - Final</title>
     <style>
         :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --green: #32D74B; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -11,87 +11,103 @@
         .screen { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; flex-direction: column; }
         .active { display: flex; }
         
-        /* Botones */
-        .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; }
+        /* Botones Pro */
+        .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; display: flex; align-items: center; justify-content: center; gap: 10px; }
         .btn-green { background: var(--green); color: black; }
         .btn-cancel { background: #333; color: var(--red); }
         .btn-back { background: transparent; color: var(--blue); width: auto; padding: 10px 0; font-weight: bold; border:none; font-size: 16px; text-align: left; }
 
-        /* Inputs */
+        /* Cuadros de texto */
         input, textarea { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1c1c1e; color: white; font-size: 18px; box-sizing: border-box; }
-        #vin-input { font-family: monospace; text-transform: uppercase; letter-spacing: 2px; border: 2px solid #444; }
+        #vin-input { font-family: monospace; text-transform: uppercase; letter-spacing: 2px; border: 2px solid var(--blue); font-size: 22px; text-align: center; }
 
-        /* Grillas */
-        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 130px; overflow-y: auto; margin-bottom: 10px; }
+        /* Grillas de Códigos */
+        .grid-label { font-size: 12px; color: var(--gray); margin: 10px 0 5px 5px; text-transform: uppercase; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 130px; overflow-y: auto; }
         .item { background: #333; padding: 14px 0; text-align: center; border-radius: 10px; font-weight: bold; font-size: 14px; }
         .item.selected { background: var(--blue); border: 2px solid white; }
 
-        #final-code { font-size: 38px; font-weight: 800; color: var(--red); text-align: center; padding: 10px; border: 2px solid var(--red); border-radius: 18px; margin: 10px 0; background: #000; }
+        #final-code { font-size: 42px; font-weight: 800; color: var(--red); text-align: center; padding: 15px; border: 2px solid var(--red); border-radius: 18px; margin: 15px 0; background: #000; }
         
-        /* Historial */
-        .load-card { background: var(--card); padding: 18px; border-radius: 20px; margin-bottom: 15px; border-left: 5px solid var(--blue); }
+        /* Estilo de Historial */
+        .load-card { background: var(--card); padding: 18px; border-radius: 20px; margin-bottom: 15px; border-left: 5px solid var(--blue); position: relative; }
         .vin-tag { color: var(--blue); font-weight: bold; font-size: 14px; margin-top: 10px; display: block; border-top: 1px solid #333; padding-top: 5px; }
-        .history-item { font-size: 13px; padding: 4px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        .history-item { font-size: 14px; padding: 6px 0; border-bottom: 1px solid #222; display: flex; justify-content: space-between; }
+        
+        /* Contador VIN */
+        .counter { text-align: center; font-size: 14px; color: var(--gray); margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div id="scr-home" class="screen active">
-        <h1 style="margin-top: 40px;">AutoLog V15</h1>
-        <p style="color: var(--gray);">Gestión de Inspección</p>
+        <h1 style="margin-top: 40px; font-size: 32px;">AutoLog V16</h1>
+        <p style="color: var(--gray);">Sistema de Inspección de Patio</p>
         <div style="margin-top: auto;">
-            <button class="btn" onclick="ir('scr-setup')">+ Nueva Inspección</button>
-            <button class="btn btn-cancel" style="color:white" onclick="ir('scr-history')">🔍 Ver Historial</button>
+            <button class="btn" onclick="ir('scr-setup')">
+                <span>➕</span> Nueva Inspección
+            </button>
+            <button class="btn btn-cancel" style="color:white" onclick="ir('scr-history')">
+                <span>🔍</span> Consultar Historial
+            </button>
         </div>
     </div>
 
     <div id="scr-setup" class="screen">
-        <button class="btn-back" onclick="ir('scr-home')">← Volver al Inicio</button>
-        <h2>Datos de Carga</h2>
-        <input type="text" id="inspector" placeholder="Nombre Inspector">
-        <input type="text" id="operador" placeholder="Nombre Operador">
-        <input type="text" id="eco" placeholder="Número ECO">
-        <button class="btn" onclick="validarSetup()">Continuar</button>
+        <button class="btn-back" onclick="ir('scr-home')">← Volver al Menú</button>
+        <h2>Datos de la Carga</h2>
+        <input type="text" id="inspector" placeholder="Nombre del Inspector">
+        <input type="text" id="operador" placeholder="Nombre del Operador">
+        <input type="text" id="eco" placeholder="Número de ECO (Obligatorio)">
+        <button class="btn" onclick="validarSetup()">Siguiente Paso</button>
     </div>
 
     <div id="scr-vin" class="screen">
         <button class="btn-back" onclick="ir('scr-setup')">← Volver a Datos</button>
-        <div id="info-current" style="font-size:12px; color:var(--gray)"></div>
-        <h2>Identificar VIN</h2>
-        <p style="font-size:12px; color:var(--blue)">Tip: Deja presionado el cuadro para "Escanear Texto" (iOS/Android).</p>
+        <h2 style="margin-bottom:5px;">Identificar Auto</h2>
+        <p style="font-size:13px; color:var(--gray); margin-bottom:20px;">Ingresa los 17 caracteres del VIN.</p>
         
-        <input type="text" id="vin-input" maxlength="17" 
-               placeholder="17 dígitos" 
-               autocomplete="off" 
-               spellcheck="false" 
-               inputmode="text"
-               oninput="actualizarVinUI()">
-               
-        <div id="vin-char-count" style="text-align:right; font-size:12px; color:var(--gray); margin-top:-10px;">0 / 17</div>
+        <input type="text" id="vin-input" maxlength="17" placeholder="VIN AQUÍ" oninput="actualizarVinUI()">
+        <div id="vin-count" class="counter">0 / 17</div>
+
+        <button id="btn-to-inspect" class="btn" style="opacity:0.4" disabled onclick="ir('scr-inspect')">
+            Comenzar Inspección
+        </button>
         
-        <button id="btn-to-inspect" class="btn" style="opacity:0.5" disabled onclick="ir('scr-inspect')">Capturar Daños</button>
-        <button class="btn btn-cancel" onclick="limpiarVin()">Borrar VIN</button>
+        <div style="margin-top: 20px; border-top: 1px solid #333; padding-top: 20px;">
+            <p style="font-size:12px; color:var(--gray); text-align:center;">¿No quieres escribir? Usa la cámara:</p>
+            <button class="btn btn-cancel" style="color:white; background:#444;" onclick="document.getElementById('hidden-cam').click()">
+                📷 Abrir Cámara del Celular
+            </button>
+            <input type="file" id="hidden-cam" accept="image/*" capture="camera" style="display:none" onchange="alert('Foto recibida. Si tu celular tiene Texto en Vivo, selecciónalo en la foto para copiarlo.')">
+        </div>
     </div>
 
     <div id="scr-inspect" class="screen">
-        <button class="btn-back" onclick="ir('scr-vin')">← Cambiar VIN</button>
+        <button class="btn-back" onclick="ir('scr-vin')">← Corregir VIN</button>
         <div id="final-code">00-00-0</div>
-        <p style="margin:0 0 5px 0; font-size:12px; color:var(--gray)">Panel | Daño | Severidad</p>
-        <div class="grid" id="g-p"></div>
-        <div class="grid" id="g-d"></div>
-        <div class="grid" id="g-s"></div>
-        <textarea id="nota" placeholder="Notas (opcional)..."></textarea>
         
-        <button class="btn btn-green" onclick="guardarRegistro(false)">➕ Guardar Daño</button>
-        <button class="btn" style="background:#222; border:1px solid var(--blue)" onclick="finalizarVin()">🏁 Siguiente Auto</button>
+        <div class="grid-label">1. Localización (Panel)</div>
+        <div class="grid" id="g-p"></div>
+        
+        <div class="grid-label">2. Tipo de Daño</div>
+        <div class="grid" id="g-d"></div>
+        
+        <div class="grid-label">3. Severidad</div>
+        <div class="grid" id="g-s"></div>
+        
+        <textarea id="nota" placeholder="Notas del daño (opcional)..."></textarea>
+        
+        <button class="btn btn-green" onclick="guardarDano(false)">✅ Guardar este Daño</button>
+        <button class="btn" style="background:#222; border:1px solid var(--blue)" onclick="finalizarVin()">🏁 Terminar este Auto</button>
     </div>
 
     <div id="scr-history" class="screen">
         <button class="btn-back" onclick="ir('scr-home')">← Volver al Inicio</button>
-        <h2>Historial Local</h2>
-        <input type="text" id="search-history" placeholder="Buscar ECO..." onkeyup="renderHistorial()">
-        <div id="history-list" style="overflow-y:auto; flex:1;"></div>
-        <button class="btn btn-cancel" onclick="borrarTodo()">Borrar Todo el Historial</button>
+        <h2>Historial de Cargas</h2>
+        <input type="text" id="search" placeholder="Buscar por ECO..." onkeyup="renderHistorial()">
+        <div id="history-list" style="overflow-y:auto; flex:1; margin-top:10px;"></div>
+        <button class="btn btn-cancel" onclick="borrarBD()">⚠️ Borrar Todo el Historial</button>
     </div>
 
     <script>
@@ -110,8 +126,7 @@
             session.insp = document.getElementById('inspector').value;
             session.op = document.getElementById('operador').value;
             session.eco = document.getElementById('eco').value;
-            if(!session.eco) return alert("El ECO es obligatorio");
-            document.getElementById('info-current').innerText = `ECO: ${session.eco} | Insp: ${session.insp}`;
+            if(!session.eco) return alert("Por favor, ingresa el número de ECO");
             ir('scr-vin');
         }
 
@@ -119,15 +134,10 @@
             const input = document.getElementById('vin-input');
             input.value = input.value.toUpperCase();
             const len = input.value.length;
-            document.getElementById('vin-char-count').innerText = `${len} / 17`;
+            document.getElementById('vin-count').innerText = `${len} / 17`;
             const btn = document.getElementById('btn-to-inspect');
             if(len === 17) { btn.disabled = false; btn.style.opacity = "1"; }
-            else { btn.disabled = true; btn.style.opacity = "0.5"; }
-        }
-
-        function limpiarVin() {
-            document.getElementById('vin-input').value = "";
-            actualizarVinUI();
+            else { btn.disabled = true; btn.style.opacity = "0.4"; }
         }
 
         function renderGrillas() {
@@ -144,73 +154,66 @@
                     container.appendChild(box);
                 }
             };
-            create('g-p', 99, val => { p = val; updateCode(); });
-            create('g-d', 32, val => { d = val; updateCode(); });
-            create('g-s', 6, val => { s = val; updateCode(); });
+            create('g-p', 99, v => { p = v; act(); });
+            create('g-d', 32, v => { d = v; act(); });
+            create('g-s', 6, v => { s = v; act(); });
         }
 
-        function updateCode() { document.getElementById('final-code').innerText = `${p}-${d}-${s}`; }
+        function act() { document.getElementById('final-code').innerText = `${p}-${d}-${s}`; }
 
-        function guardarRegistro(silencioso) {
+        function guardarDano(silencioso) {
             const code = document.getElementById('final-code').innerText;
-            if(code === "00-00-0") return alert("Seleccione códigos de daño");
+            if(code === "00-00-0") return alert("Selecciona los códigos de daño primero");
             
             const entry = {
                 vin: document.getElementById('vin-input').value,
                 code: code,
                 nota: document.getElementById('nota').value,
-                fecha: new Date().toLocaleString()
+                hora: new Date().toLocaleTimeString()
             };
 
-            let db = JSON.parse(localStorage.getItem('autolog_db_v15') || '[]');
-            let cargaIdx = db.findIndex(c => c.eco === session.eco);
+            let db = JSON.parse(localStorage.getItem('autolog_db_v16') || '[]');
+            let idx = db.findIndex(c => c.eco === session.eco);
             
-            if(cargaIdx > -1) {
-                db[cargaIdx].danos.push(entry);
-            } else {
-                db.push({ eco: session.eco, op: session.op, insp: session.insp, danos: [entry] });
-            }
+            if(idx > -1) { db[idx].danos.push(entry); } 
+            else { db.push({ eco: session.eco, op: session.op, danos: [entry], fecha: new Date().toLocaleDateString() }); }
 
-            localStorage.setItem('autolog_db_v15', JSON.stringify(db));
-            if(!silencioso) alert("✅ Guardado");
+            localStorage.setItem('autolog_db_v16', JSON.stringify(db));
+            if(!silencioso) alert("✅ Guardado correctamente");
             
-            // Reset campos
-            p="00"; d="00"; s="0"; updateCode(); 
+            p="00"; d="00"; s="0"; act(); 
             document.getElementById('nota').value = "";
             renderGrillas();
         }
 
         function finalizarVin() {
-            guardarRegistro(true);
-            limpiarVin();
+            guardarDano(true);
+            document.getElementById('vin-input').value = "";
+            actualizarVinUI();
             ir('scr-vin');
         }
 
         function renderHistorial() {
             const list = document.getElementById('history-list');
-            const search = document.getElementById('search-history').value.toLowerCase();
+            const busqueda = document.getElementById('search').value.toLowerCase();
             list.innerHTML = "";
-            let db = JSON.parse(localStorage.getItem('autolog_db_v15') || '[]');
+            let db = JSON.parse(localStorage.getItem('autolog_db_v16') || '[]');
 
             db.reverse().forEach(carga => {
-                if(carga.eco.toLowerCase().includes(search)) {
+                if(carga.eco.toLowerCase().includes(busqueda)) {
                     let card = `<div class="load-card">
-                        <b>ECO: ${carga.eco}</b> <br>
-                        <small>Op: ${carga.op} | Insp: ${carga.insp}</small>`;
+                        <b>ECO: ${carga.eco}</b> <span style="float:right; font-size:10px; color:var(--gray)">${carga.fecha}</span><br>
+                        <small>Operador: ${carga.op}</small>`;
                     
-                    // Agrupar daños por VIN dentro de la card
                     let vins = {};
-                    carga.danos.forEach(d => {
-                        if(!vins[d.vin]) vins[d.vin] = [];
-                        vins[d.vin].push(d);
-                    });
+                    carga.danos.forEach(d => { if(!vins[d.vin]) vins[d.vin] = []; vins[d.vin].push(d); });
 
                     for(let v in vins) {
                         card += `<span class="vin-tag">VIN: ${v}</span>`;
                         vins[v].forEach(d => {
                             card += `<div class="history-item">
                                 <span>Cod: ${d.code}</span>
-                                <span style="color:var(--gray)">${d.nota ? '*' : ''}</span>
+                                <span style="color:var(--gray); font-size:11px;">${d.hora}</span>
                             </div>`;
                         });
                     }
@@ -220,9 +223,9 @@
             });
         }
 
-        function borrarTodo() {
-            if(confirm("¿Seguro que quieres borrar todo el historial?")) {
-                localStorage.removeItem('autolog_db_v15');
+        function borrarBD() {
+            if(confirm("¿Estás seguro? Se borrarán todos los datos guardados en este celular.")) {
+                localStorage.removeItem('autolog_db_v16');
                 renderHistorial();
             }
         }
