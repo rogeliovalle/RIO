@@ -2,146 +2,135 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AutoLog Pro V10</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>AutoLog Free V11</title>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <style>
         :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --green: #32D74B; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; -webkit-tap-highlight-color: transparent; }
         .screen { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; flex-direction: column; }
         .active { display: flex; }
-        
-        /* UI Elements */
-        .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; -webkit-appearance: none; }
+        .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; }
         .btn-cancel { background: #333; color: var(--red); }
-        .btn-back { background: transparent; color: var(--blue); width: auto; padding: 10px; margin: 0; font-weight: bold; }
-        .btn-finish-vin { background: #2C2C2E; color: var(--blue); border: 1px solid var(--blue); }
-        
-        input, textarea { width: 100%; padding: 18px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #222; color: white; font-size: 16px; box-sizing: border-box; font-family: inherit; }
-        textarea { resize: none; height: 70px; }
-        
-        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 15px; border-radius: 15px; max-height: 150px; overflow-y: auto; }
-        .item { background: #333; padding: 15px 5px; text-align: center; border-radius: 10px; font-size: 14px; }
+        .btn-back { background: transparent; color: var(--blue); width: auto; padding: 10px 0; font-weight: bold; border:none; }
+        input, textarea { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1c1c1e; color: white; font-size: 16px; box-sizing: border-box; }
+        #final-code { font-size: 38px; font-weight: 800; color: var(--red); text-align: center; padding: 15px; border: 2px solid var(--red); border-radius: 18px; margin: 15px 0; background: #000; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 160px; overflow-y: auto; }
+        .item { background: #333; padding: 14px 0; text-align: center; border-radius: 10px; font-size: 14px; }
         .item.selected { background: var(--blue); border: 2px solid white; }
-
-        /* Historial y Tarjetas */
-        .load-card { background: var(--card); padding: 20px; border-radius: 20px; margin-bottom: 15px; border-left: 5px solid var(--blue); }
-        .vin-group { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #444; }
-        .damage-line { padding: 8px 0; border-bottom: 1px solid #333; }
-        .code-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
-        .asterisk { color: var(--blue); font-weight: bold; margin-left: 5px; }
-        .comment-box { display: none; background: #222; padding: 10px; border-radius: 8px; margin-top: 5px; font-size: 12px; color: var(--gray); font-style: italic; border-left: 2px solid var(--blue); }
-        
-        #final-code { font-size: 35px; font-weight: 900; color: var(--red); text-align: center; padding: 10px; border: 2px solid var(--red); border-radius: 15px; margin: 10px 0; background: #111; }
-        .badge-session { font-size: 12px; color: var(--gray); background: #222; padding: 10px; border-radius: 10px; margin-bottom: 10px; }
+        .load-card { background: var(--card); padding: 18px; border-radius: 22px; margin-bottom: 15px; border-left: 6px solid var(--blue); }
+        .comment-box { display: none; background: #2c2c2e; padding: 10px; border-radius: 10px; margin-top: 8px; font-size: 13px; color: #ccc; font-style: italic; border-left: 3px solid var(--blue); }
     </style>
 </head>
 <body>
 
     <div id="scr-home" class="screen active">
-        <h1 style="font-size: 40px; margin-top: 40px;">AutoLog</h1>
-        <p style="color: var(--gray);">Gestión de Cargas</p>
+        <h1 style="margin-top: 40px;">AutoLog V11</h1>
+        <p style="color: var(--gray);">Versión 100% Gratuita</p>
         <div style="margin-top: auto;">
-            <button class="btn" onclick="prepararNuevaCarga()">+ Nueva Carga (ECO)</button>
-            <button class="btn btn-cancel" style="color:white" onclick="ir('scr-historial')">🔍 Consultar Historial</button>
+            <button class="btn" onclick="nuevaOperacion()">+ Iniciar Nueva Carga</button>
+            <button class="btn btn-cancel" style="color:white" onclick="ir('scr-historial')">🔍 Ver Historial</button>
         </div>
     </div>
 
-    <div id="pin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:100; align-items:center; justify-content:center;">
+    <div id="pin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:100; align-items:center; justify-content:center;">
         <div style="background:var(--card); padding:30px; border-radius:25px; width:80%; text-align:center;">
             <h3>Seguridad</h3>
-            <input type="tel" id="pin-input" placeholder="PIN" style="text-align:center; font-size: 30px;">
+            <input type="tel" id="pin-input" placeholder="PIN" style="text-align:center; font-size:30px;">
             <button class="btn" onclick="validarPin()">Entrar</button>
-            <button class="btn btn-cancel" onclick="hidePin()">Cancelar</button>
+            <button class="btn btn-cancel" onclick="document.getElementById('pin-modal').style.display='none'">Cerrar</button>
         </div>
     </div>
 
     <div id="scr-setup" class="screen">
-        <button class="btn-back" onclick="confirmarSalida('scr-home')">← Cancelar</button>
-        <h2>Nueva Carga</h2>
+        <button class="btn-back" onclick="ir('scr-home')">← Cancelar</button>
+        <h2>Configuración</h2>
         <input type="text" id="inspector" placeholder="Inspector">
         <input type="text" id="operador" placeholder="Operador">
         <input type="text" id="eco" placeholder="Número de ECO">
-        <button class="btn" onclick="iniciarCarga()">Confirmar Carga</button>
+        <button class="btn" onclick="iniciarCarga()">Confirmar</button>
     </div>
 
     <div id="scr-vin" class="screen">
-        <button class="btn-back" onclick="confirmarSalida('scr-home')">← Finalizar Carga</button>
-        <div class="badge-session" id="info-carga"></div>
+        <button class="btn-back" onclick="ir('scr-home')">← Finalizar Carga</button>
+        <h2 id="info-carga-vin" style="font-size:12px; color:var(--gray)"></h2>
         <h2>VIN del Auto</h2>
-        <input type="file" accept="image/*" capture="camera">
-        <input type="text" id="vin-input" placeholder="Ingrese VIN completo">
-        <button class="btn" onclick="abrirInspeccion()">Capturar Daños</button>
+        <p style="font-size:12px; color:var(--blue)">Sugerencia: Usa el escáner del teclado de tu iPhone para mayor precisión.</p>
+        <input type="file" accept="image/*" capture="camera" onchange="escanearGratis(this)">
+        <p id="status-ocr" style="font-size:12px; color:var(--green); text-align:center;"></p>
+        <input type="text" id="vin-input" placeholder="VIN (17 caracteres)" autocomplete="off" spellcheck="false">
+        <button class="btn" onclick="abrirInspeccion()">Siguiente: Daños</button>
     </div>
 
     <div id="scr-inspeccion" class="screen">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <button class="btn-back" onclick="ir('scr-vin')">← Volver</button>
-            <span id="vin-actual-display" style="color:var(--gray); font-size:12px;"></span>
-        </div>
-        
-        <p>1. Panel:</p>
-        <div class="grid" id="g-p"></div>
-        <p>2. Daño:</p>
-        <div class="grid" id="g-d"></div>
-        <p>3. Severidad:</p>
-        <div class="grid" id="g-s"></div>
-
+        <button class="btn-back" onclick="ir('scr-vin')">← Volver al VIN</button>
+        <p>Panel:</p><div class="grid" id="g-p"></div>
+        <p>Daño:</p><div class="grid" id="g-d"></div>
+        <p>Severidad:</p><div class="grid" id="g-s"></div>
         <div id="final-code">00-00-0</div>
-        <textarea id="comentarios" placeholder="Comentarios de este daño..."></textarea>
-        
-        <button class="btn" style="background:var(--green)" onclick="guardarDanoIndividual(false)">➕ Capturar otro daño en este VIN</button>
-        <button class="btn btn-finish-vin" onclick="finalizarEsteVin()">🏁 Terminar VIN / Siguiente Auto</button>
+        <textarea id="comentarios" placeholder="Notas adicionales..."></textarea>
+        <button class="btn" style="background:var(--green)" onclick="guardarDano(false)">➕ Guardar y seguir en este VIN</button>
+        <button class="btn" style="background:#222; border:1px solid var(--blue)" onclick="finalizarVin()">🏁 Siguiente Auto</button>
     </div>
 
     <div id="scr-historial" class="screen">
-        <button class="btn-back" onclick="ir('scr-home')">← Volver</button>
-        <h2>Historial</h2>
-        <input type="text" id="buscador" placeholder="Buscar ECO u Operador..." onkeyup="mostrarHistorial()">
+        <button class="btn-back" onclick="ir('scr-home')">← Inicio</button>
+        <h2>Cargas Guardadas</h2>
         <div id="lista-cargas"></div>
     </div>
 
     <script>
         let p="00", d="00", s="0";
-        let cargaActual = { inspector: "", operador: "", eco: "" };
+        let carga = { insp: "", op: "", eco: "" };
 
         function ir(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             if(id === 'scr-inspeccion') cargarGrillas();
             if(id === 'scr-historial') mostrarHistorial();
-            if(id === 'scr-vin') {
-                document.getElementById('info-carga').innerHTML = `<b>ECO:</b> ${cargaActual.eco} | <b>Inspector:</b> ${cargaActual.inspector}`;
-            }
         }
 
-        function prepararNuevaCarga() {
+        function nuevaOperacion() {
             document.getElementById('pin-input').value = "";
-            document.getElementById('inspector').value = "";
-            document.getElementById('operador').value = "";
-            document.getElementById('eco').value = "";
-            showPin();
+            document.getElementById('pin-modal').style.display = 'flex';
         }
 
-        function showPin() { document.getElementById('pin-modal').style.display='flex'; }
-        function hidePin() { document.getElementById('pin-modal').style.display='none'; }
-        
         function validarPin() {
-            if(document.getElementById('pin-input').value === '678') { hidePin(); ir('scr-setup'); }
-            else { alert("PIN Incorrecto"); document.getElementById('pin-input').value = ""; }
+            if(document.getElementById('pin-input').value === '678') {
+                document.getElementById('pin-modal').style.display = 'none';
+                ir('scr-setup');
+            } else { alert("Error"); }
         }
 
         function iniciarCarga() {
-            cargaActual.inspector = document.getElementById('inspector').value;
-            cargaActual.operador = document.getElementById('operador').value;
-            cargaActual.eco = document.getElementById('eco').value;
-            if(!cargaActual.eco || !cargaActual.operador || !cargaActual.inspector) return alert("Faltan datos.");
+            carga.insp = document.getElementById('inspector').value;
+            carga.op = document.getElementById('operador').value;
+            carga.eco = document.getElementById('eco').value;
+            document.getElementById('info-carga-vin').innerText = `ECO: ${carga.eco} | Insp: ${carga.insp}`;
             ir('scr-vin');
         }
 
+        // --- OCR GRATIS MEJORADO ---
+        async function escanearGratis(input) {
+            if(!input.files[0]) return;
+            const st = document.getElementById('status-ocr');
+            st.innerText = "🔍 Analizando... mantén la calma.";
+            
+            try {
+                const worker = await Tesseract.createWorker('eng');
+                await worker.setParameters({
+                    tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+                });
+                const { data: { text } } = await worker.recognize(input.files[0]);
+                const limpio = text.replace(/[^A-Z0-9]/gi, "").substring(0,17).toUpperCase();
+                document.getElementById('vin-input').value = limpio;
+                st.innerText = "✅ Lectura terminada";
+                await worker.terminate();
+            } catch(e) { st.innerText = "❌ Error. Prueba manual."; }
+        }
+
         function abrirInspeccion() {
-            const vin = document.getElementById('vin-input').value;
-            if(!vin) return alert("Ingrese el VIN primero");
-            document.getElementById('vin-actual-display').innerText = "VIN: " + vin;
+            if(!document.getElementById('vin-input').value) return alert("Falta VIN");
             ir('scr-inspeccion');
         }
 
@@ -150,7 +139,7 @@
                 const el = document.getElementById(id); el.innerHTML = "";
                 for(let i=1; i<=max; i++) {
                     let b = document.createElement('div'); b.className='item'; b.innerText=i;
-                    b.onclick = () => { el.querySelectorAll('.item').forEach(x => x.classList.remove('selected')); b.classList.add('selected'); cb(i); };
+                    b.onclick = () => { el.querySelectorAll('.item').forEach(x=>x.classList.remove('selected')); b.classList.add('selected'); cb(i); };
                     el.appendChild(b);
                 }
             };
@@ -161,104 +150,33 @@
 
         function act() { document.getElementById('final-code').innerText = `${p}-${d}-${s}`; }
 
-        // LÓGICA DE GUARDADO CENTRALIZADA
-        function guardarDanoIndividual(silencioso = false) {
-            const vin = document.getElementById('vin-input').value;
-            const com = document.getElementById('comentarios').value;
+        function guardarDano(silencioso) {
             const cod = document.getElementById('final-code').innerText;
-
-            // Si el código es el default, no guardamos nada
-            if(cod === "00-00-0") return false;
-
-            const registro = { vin, codigo: cod, sev: parseInt(s), nota: com };
-            
-            let historial = JSON.parse(localStorage.getItem('hist_autolog_v10') || '[]');
+            if(cod === "00-00-0") return;
+            const res = { vin: document.getElementById('vin-input').value, cod: cod, nota: document.getElementById('comentarios').value, sev: parseInt(s) };
+            let db = JSON.parse(localStorage.getItem('autolog_free') || '[]');
             const hoy = new Date().toLocaleDateString();
-            let index = historial.findIndex(h => h.eco === cargaActual.eco && h.fecha === hoy);
-            
-            if(index > -1) { 
-                historial[index].daños.push(registro); 
-            } else {
-                historial.push({
-                    fecha: hoy, inspector: cargaActual.inspector, operador: cargaActual.operador, eco: cargaActual.eco, daños: [registro]
-                });
-            }
-
-            localStorage.setItem('hist_autolog_v10', JSON.stringify(historial));
-            
-            if(!silencioso) alert("✅ Daño Capturado.");
-            
-            // Limpiar campos
-            p="00"; d="00"; s="0"; 
-            document.getElementById('comentarios').value = "";
-            act();
-            cargarGrillas(); 
-            return true;
+            let idx = db.findIndex(h => h.eco === carga.eco && h.fecha === hoy);
+            if(idx > -1) db[idx].danos.push(res);
+            else db.push({ fecha: hoy, insp: carga.insp, op: carga.op, eco: carga.eco, danos: [res] });
+            localStorage.setItem('autolog_free', JSON.stringify(db));
+            if(!silencioso) alert("Capturado");
+            p="00"; d="00"; s="0"; document.getElementById('comentarios').value = ""; act(); cargarGrillas();
         }
 
-        // POKA-YOKE: Al terminar VIN, revisa si hay algo pendiente de guardar
-        function finalizarEsteVin() {
-            const cod = document.getElementById('final-code').innerText;
-            
-            if(cod !== "00-00-0") {
-                // Hay un daño sin capturar, lo guardamos automáticamente
-                guardarDanoIndividual(true);
-            }
-
+        function finalizarVin() {
+            if(document.getElementById('final-code').innerText !== "00-00-0") guardarDano(true);
             document.getElementById('vin-input').value = "";
             ir('scr-vin');
         }
 
-        function toggleComentario(el) {
-            const box = el.nextElementSibling;
-            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
-        }
-
         function mostrarHistorial() {
-            const query = document.getElementById('buscador').value.toLowerCase();
-            const cont = document.getElementById('lista-cargas');
-            cont.innerHTML = "";
-            let datos = JSON.parse(localStorage.getItem('hist_autolog_v10') || '[]');
-
-            datos.reverse().forEach(carga => {
-                if(carga.eco.toLowerCase().includes(query) || carga.operador.toLowerCase().includes(query)) {
-                    const vinsAgrupados = {};
-                    carga.daños.forEach(d => {
-                        if(!vinsAgrupados[d.vin]) vinsAgrupados[d.vin] = [];
-                        vinsAgrupados[d.vin].push(d);
-                    });
-
-                    let htmlVins = "";
-                    for(let vin in vinsAgrupados) {
-                        vinsAgrupados[vin].sort((a,b) => b.sev - a.sev);
-                        let danosHtml = vinsAgrupados[vin].map(d => `
-                            <div class="damage-line">
-                                <div class="code-row" onclick="${d.nota ? 'toggleComentario(this)' : ''}">
-                                    <span><b style="color:var(--red)">${d.codigo}</b>${d.nota ? '<span class="asterisk">*</span>' : ''}</span>
-                                    <span class="severity-badge" style="color:var(--gray)">S:${d.sev}</span>
-                                </div>
-                                <div class="comment-box">📝 ${d.nota}</div>
-                            </div>
-                        `).join('');
-
-                        htmlVins += `<div class="vin-group"><small style="color:var(--blue)">VIN:</small> <b>${vin}</b>${danosHtml}</div>`;
-                    }
-
-                    cont.innerHTML += `
-                        <div class="load-card">
-                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid #444; padding-bottom:5px;">
-                                <div><b>ECO: ${carga.eco}</b><br><small>${carga.fecha}</small></div>
-                                <div style="text-align:right"><small>Op: ${carga.operador}</small></div>
-                            </div>
-                            ${htmlVins}
-                        </div>
-                    `;
-                }
+            const cont = document.getElementById('lista-cargas'); cont.innerHTML = "";
+            let db = JSON.parse(localStorage.getItem('autolog_free') || '[]');
+            db.reverse().forEach(c => {
+                let htmlD = c.danos.map(d => `<div style="border-bottom:1px solid #333; padding:5px 0;"><b>${d.vin}</b>: <span style="color:var(--red)">${d.cod}</span> ${d.nota ? '*' : ''}</div>`).join('');
+                cont.innerHTML += `<div class="load-card"><b>ECO: ${c.eco}</b> (${c.fecha})<br><small>Op: ${c.op}</small><br>${htmlD}</div>`;
             });
-        }
-
-        function confirmarSalida(dest) {
-            if(confirm("¿Seguro que deseas finalizar esta sesión?")) ir(dest);
         }
     </script>
 </body>
