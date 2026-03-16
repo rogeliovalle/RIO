@@ -3,61 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AutoLog V13.3 - VIN Barcode</title>
-    
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    
+    <title>AutoLog V14 - Manual Pro</title>
     <style>
-        :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --accent: #30D158; }
+        :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --green: #32D74B; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; }
         .screen { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; flex-direction: column; }
         .active { display: flex; }
-        .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; }
-        .btn-scanner { background: var(--accent); color: black; }
-        #reader { width: 100%; border-radius: 20px; overflow: hidden; background: #111; border: 2px solid var(--gray); min-height: 300px; }
-        input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1c1c1e; color: white; font-size: 16px; box-sizing: border-box; }
-        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 140px; overflow-y: auto; }
-        .item { background: #333; padding: 14px 0; text-align: center; border-radius: 10px; font-size: 14px; font-weight: bold; }
+        .btn { background: var(--blue); color: white; border: none; padding: 20px; border-radius: 14px; width: 100%; font-size: 18px; font-weight: 600; margin: 8px 0; }
+        input { width: 100%; padding: 18px; margin: 10px 0; border-radius: 12px; border: 2px solid #333; background: #1c1c1e; color: white; font-size: 20px; text-transform: uppercase; font-family: monospace; text-align: center; box-sizing: border-box; }
+        input:focus { border-color: var(--blue); outline: none; }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; }
+        .item { background: #333; padding: 15px 0; text-align: center; border-radius: 10px; font-weight: bold; }
         .item.selected { background: var(--blue); border: 2px solid white; }
-        #final-code { font-size: 38px; font-weight: 800; color: var(--red); text-align: center; padding: 10px; border: 2px solid var(--red); border-radius: 18px; margin: 10px 0; background: #000; }
+        #final-code { font-size: 40px; font-weight: 800; color: var(--red); text-align: center; padding: 15px; border: 2px solid var(--red); border-radius: 18px; margin: 15px 0; background: #000; }
+        .vin-counter { text-align: right; font-size: 12px; color: var(--gray); margin-top: -8px; }
     </style>
 </head>
 <body>
 
     <div id="scr-home" class="screen active">
-        <h1 style="margin-top: 40px;">AutoLog V13.3</h1>
-        <p style="color: var(--gray);">Escáner de Barras Alta Precisión</p>
-        <button class="btn" onclick="ir('scr-setup')">+ Iniciar Nueva Carga</button>
+        <h1 style="margin-top: 40px;">AutoLog V14</h1>
+        <p style="color: var(--gray);">Captura Manual Rápida</p>
+        <button class="btn" onclick="ir('scr-setup')">+ Nueva Inspección</button>
     </div>
 
     <div id="scr-setup" class="screen">
-        <h2>Nueva Operación</h2>
-        <input type="text" id="inspector" placeholder="Inspector">
-        <input type="text" id="operador" placeholder="Operador">
-        <input type="text" id="eco" placeholder="Número ECO">
-        <button class="btn btn-scanner" onclick="ir('scr-vin')">Confirmar</button>
+        <h2>Datos del Servicio</h2>
+        <input type="text" id="op" placeholder="Operador">
+        <input type="text" id="eco" placeholder="ECO">
+        <button class="btn" onclick="ir('scr-vin')">Siguiente</button>
     </div>
 
     <div id="scr-vin" class="screen">
-        <h2>Escanear Código VIN</h2>
-        <div id="reader"></div>
-        <div style="display: flex; gap: 10px;">
-            <button id="btn-cam" class="btn btn-scanner" onclick="activarCamara()">ENCENDER CÁMARA</button>
-        </div>
-        <input type="text" id="vin-input" placeholder="VIN detectado aparecerá aquí">
-        <button class="btn" onclick="ir('scr-inspect')">Continuar</button>
+        <h2>Identificar VIN</h2>
+        <p style="font-size:14px; color:var(--gray)">Escribe los 17 dígitos o usa el escáner del teclado de tu celular.</p>
+        <input type="text" id="vin-input" maxlength="17" placeholder="ABC123..." oninput="contarVIN()">
+        <div id="vin-count" class="vin-counter">0 / 17</div>
+        
+        <button id="btn-next" class="btn" style="opacity: 0.5" onclick="abrirInspeccion()" disabled>Continuar</button>
+        <button class="btn" style="background:#333; color:var(--red)" onclick="limpiarVIN()">Borrar Todo</button>
     </div>
 
     <div id="scr-inspect" class="screen">
         <div id="final-code">00-00-0</div>
-        <div class="grid" id="grid-p"></div><div class="grid" id="grid-d"></div><div class="grid" id="grid-s"></div>
-        <button class="btn btn-scanner" onclick="alert('Guardado localmente')">➕ Guardar</button>
-        <button class="btn" style="background:#222" onclick="location.reload()">🏁 Finalizar Todo</button>
+        <div class="grid" id="grid-p"></div><br>
+        <div class="grid" id="grid-d"></div><br>
+        <div class="grid" id="grid-s"></div>
+        <button class="btn" style="background:var(--green)" onclick="guardar()">Guardar Registro</button>
+        <button class="btn" style="background:#222" onclick="ir('scr-vin'); limpiarVIN();">Siguiente Auto</button>
     </div>
 
     <script>
         let p="00", d="00", s="0";
-        let html5QrCode;
 
         function ir(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -65,39 +62,29 @@
             if(id === 'scr-inspect') generarGrillas();
         }
 
-        async function activarCamara() {
-            if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+        function contarVIN() {
+            const input = document.getElementById('vin-input');
+            const val = input.value.toUpperCase();
+            input.value = val;
+            const len = val.length;
+            document.getElementById('vin-count').innerText = `${len} / 17`;
             
-            const config = { 
-                fps: 20, 
-                qrbox: { width: 300, height: 120 },
-                aspectRatio: 1.0,
-                // Forzamos a que busque formatos de barras (1D) comunes en autos
-                formatsToSupport: [ 
-                    Html5QrcodeSupportedFormats.CODE_128, 
-                    Html5QrcodeSupportedFormats.CODE_39,
-                    Html5QrcodeSupportedFormats.I25
-                ]
-            };
-            
-            try {
-                await html5QrCode.start(
-                    { facingMode: "environment" }, 
-                    config, 
-                    (decodedText) => {
-                        document.getElementById('vin-input').value = decodedText.toUpperCase();
-                        if(navigator.vibrate) navigator.vibrate(100);
-                        // Intentamos encender la linterna si está disponible para mejorar lectura
-                        html5QrCode.applyVideoConstraints({
-                            advanced: [{torch: true}]
-                        }).catch(() => {});
-                    }
-                );
-                document.getElementById('btn-cam').style.display = 'none';
-            } catch (err) {
-                alert("Error al iniciar cámara: " + err);
+            const btn = document.getElementById('btn-next');
+            if(len === 17) {
+                btn.style.opacity = "1";
+                btn.disabled = false;
+            } else {
+                btn.style.opacity = "0.5";
+                btn.disabled = true;
             }
         }
+
+        function limpiarVIN() {
+            document.getElementById('vin-input').value = "";
+            contarVIN();
+        }
+
+        function abrirInspeccion() { ir('scr-inspect'); }
 
         function generarGrillas() {
             const r = (id, max, cb) => {
@@ -113,6 +100,7 @@
             r('grid-s', 6, v => { s = v; act(); });
         }
         function act() { document.getElementById('final-code').innerText = `${p}-${d}-${s}`; }
+        function guardar() { alert("Guardado en Memoria"); ir('scr-home'); }
     </script>
 </body>
 </html>
