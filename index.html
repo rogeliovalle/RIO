@@ -17,19 +17,21 @@
         .active { display: flex; }
         .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; }
         .btn-cancel { background: #333; color: var(--red); }
-        .btn-back { background: transparent; color: var(--blue); width: auto; padding: 10px 0; font-weight: bold; border:none; }
+        .btn-back { background: transparent; color: var(--blue); width: auto; padding: 10px 0; font-weight: bold; border:none; font-size: 16px; }
         input, textarea { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1c1c1e; color: white; font-size: 16px; box-sizing: border-box; }
-        textarea { resize: none; height: 70px; border: 1px dashed var(--gray); }
-        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 150px; overflow-y: auto; }
-        .item { background: #333; padding: 14px 0; text-align: center; border-radius: 10px; font-size: 14px; }
+        textarea { resize: none; height: 75px; border: 1px dashed var(--gray); }
+        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 140px; overflow-y: auto; }
+        .item { background: #333; padding: 14px 0; text-align: center; border-radius: 10px; font-size: 14px; font-weight: bold; }
         .item.selected { background: var(--blue); border: 2px solid white; }
-        #final-code { font-size: 38px; font-weight: 800; color: var(--red); text-align: center; padding: 10px; border: 2px solid var(--red); border-radius: 18px; margin: 10px 0; background: #000; }
+        #final-code { font-size: 38px; font-weight: 800; color: var(--red); text-align: center; padding: 10px; border: 2px solid var(--red); border-radius: 18px; margin: 10px 0; background: #000; letter-spacing: 2px; }
         .load-card { background: var(--card); padding: 18px; border-radius: 22px; margin-bottom: 15px; border-left: 6px solid var(--blue); }
         .vin-header { color: var(--blue); font-weight: 700; border-top: 1px solid #333; padding-top: 10px; margin-top: 10px; font-size: 14px; }
         .damage-line { padding: 8px 0; border-bottom: 1px solid #2c2c2e; }
-        .code-row { display: flex; justify-content: space-between; align-items: center; }
+        .code-row { display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+        .asterisk { color: var(--blue); font-weight: bold; margin-left: 5px; }
         .comment-box { display: none; background: #2c2c2e; padding: 10px; border-radius: 10px; margin-top: 5px; font-size: 12px; font-style: italic; color: #ccc; border-left: 3px solid var(--blue); }
         #proc-canvas { display: none; }
+        .loader-text { font-size: 13px; color: var(--green); text-align: center; margin: 5px 0; display: none; }
     </style>
 </head>
 <body>
@@ -37,7 +39,7 @@
 
     <div id="scr-home" class="screen active">
         <h1 style="margin-top: 40px;">AutoLog V12</h1>
-        <p style="color: var(--gray);">Listo para trabajar sin internet</p>
+        <p style="color: var(--gray);">Listo para trabajar sin señal</p>
         <div style="margin-top: auto;">
             <button class="btn" onclick="prepararNuevaCarga()">+ Iniciar Nueva Carga</button>
             <button class="btn btn-cancel" style="color:white" onclick="ir('scr-history')">🔍 Historial Local</button>
@@ -46,18 +48,18 @@
 
     <div id="pin-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:100; align-items:center; justify-content:center;">
         <div style="background:var(--card); padding:30px; border-radius:25px; width:80%; text-align:center;">
-            <h3>PIN Acceso</h3>
-            <input type="tel" id="pin-input" placeholder="****" style="text-align:center; font-size:32px;">
+            <h3>Seguridad</h3>
+            <input type="tel" id="pin-input" placeholder="PIN" style="text-align:center; font-size:32px;">
             <button class="btn" onclick="validarPin()">Entrar</button>
             <button class="btn btn-cancel" onclick="document.getElementById('pin-modal').style.display='none'">Cerrar</button>
         </div>
     </div>
 
     <div id="scr-setup" class="screen">
-        <button class="btn-back" onclick="confirmarSalida('scr-home')">← Cancelar</button>
-        <h2>Nueva Operación</h2>
-        <input type="text" id="inspector" placeholder="Inspector">
-        <input type="text" id="operador" placeholder="Operador">
+        <button class="btn-back" onclick="confirmarSalida('scr-home')">← Cancelar Carga</button>
+        <h2>Configuración</h2>
+        <input type="text" id="inspector" placeholder="Nombre Inspector">
+        <input type="text" id="operador" placeholder="Nombre Operador">
         <input type="text" id="eco" placeholder="Número ECO">
         <button class="btn" onclick="iniciarCarga()">Confirmar Carga</button>
     </div>
@@ -66,40 +68,35 @@
         <button class="btn-back" onclick="confirmarSalida('scr-home')">← Finalizar Sesión</button>
         <div id="badge-info" style="font-size:11px; color:var(--gray); margin-bottom:10px;"></div>
         <h2>Captura de VIN</h2>
-        <input type="file" accept="image/*" capture="camera">
+        <input type="file" accept="image/*" capture="camera" onchange="escanearOffline(this)">
+        <div id="loader-ocr" class="loader-text">🚀 Procesando contraste y leyendo...</div>
         <input type="text" id="vin-input" placeholder="VIN (17 caracteres)">
         <button class="btn" onclick="abrirInspeccion()">Capturar Daños</button>
     </div>
 
     <div id="scr-inspect" class="screen">
         <div style="display:flex; justify-content:space-between; align-items:center;">
-            <button class="btn-back" onclick="ir('scr-vin')">← Volver al VIN</button>
+            <button class="btn-back" onclick="ir('scr-vin')">← Volver</button>
             <span id="vin-display" style="font-size:12px; color:var(--gray)"></span>
         </div>
-        <p>1. Panel:</p><div class="grid" id="grid-p"></div>
-        <p>2. Daño:</p><div class="grid" id="grid-d"></div>
-        <p>3. Severidad:</p><div class="grid" id="grid-s"></div>
         <div id="final-code">00-00-0</div>
-        <textarea id="comentarios" placeholder="Notas adicionales..."></textarea>
+        <p style="margin:0; font-size:12px; color:var(--gray)">1. Panel | 2. Daño | 3. Severidad</p>
+        <div class="grid" id="grid-p"></div><div class="grid" id="grid-d"></div><div class="grid" id="grid-s"></div>
+        <textarea id="comentarios" placeholder="¿Alguna nota adicional sobre este daño?"></textarea>
         <button class="btn" style="background:var(--green)" onclick="guardarDano(false)">➕ Guardar y seguir en VIN</button>
-        <button class="btn" style="background:#222; border:1px solid var(--blue)" onclick="finalizarEsteVin()">🏁 Siguiente Auto</button>
+        <button class="btn" style="background:#222; border:1px solid var(--blue)" onclick="finalizarEsteVin()">🏁 Siguiente VIN</button>
     </div>
 
     <div id="scr-history" class="screen">
         <button class="btn-back" onclick="ir('scr-home')">← Inicio</button>
         <h2>Cargas Guardadas</h2>
-        <input type="text" id="buscador" placeholder="Buscar ECO..." onkeyup="mostrarHistorial()">
+        <input type="text" id="buscador" placeholder="Buscar por ECO u Operador..." onkeyup="mostrarHistorial()">
         <div id="lista-cargas"></div>
     </div>
 
     <script>
-        // REGISTRO DE SERVICE WORKER PARA MODO OFFLINE
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js').then(reg => {
-                    console.log('Modo Offline Activo', reg.scope);
-                });
-            });
+            window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); });
         }
 
         let p="00", d="00", s="0";
@@ -117,6 +114,9 @@
 
         function prepararNuevaCarga() {
             document.getElementById('pin-input').value = "";
+            document.getElementById('inspector').value = "";
+            document.getElementById('operador').value = "";
+            document.getElementById('eco').value = "";
             document.getElementById('pin-modal').style.display = 'flex';
         }
 
@@ -133,6 +133,37 @@
             carga.eco = document.getElementById('eco').value;
             if(!carga.eco || !carga.op) return alert("Faltan datos");
             ir('scr-vin');
+        }
+
+        async function escanearOffline(input) {
+            if(!input.files[0]) return;
+            const loader = document.getElementById('loader-ocr');
+            const vinIn = document.getElementById('vin-input');
+            loader.style.display = 'block';
+            vinIn.value = "Leyendo...";
+
+            const img = new Image();
+            img.src = URL.createObjectURL(input.files[0]);
+            img.onload = async () => {
+                const canvas = document.getElementById('proc-canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width; canvas.height = img.height;
+                ctx.filter = 'grayscale(1) contrast(200%)';
+                ctx.drawImage(img, 0, 0);
+
+                try {
+                    const worker = await Tesseract.createWorker('eng');
+                    await worker.setParameters({ tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' });
+                    const { data: { text } } = await worker.recognize(canvas.toDataURL());
+                    vinIn.value = text.replace(/[^A-Z0-9]/gi, "").substring(0,17).toUpperCase();
+                    loader.style.display = 'none';
+                    await worker.terminate();
+                } catch(e) { 
+                    loader.style.display = 'none';
+                    vinIn.value = "";
+                    alert("Error. Ingresa manual."); 
+                }
+            };
         }
 
         function abrirInspeccion() {
@@ -165,10 +196,10 @@
             let db = JSON.parse(localStorage.getItem('autolog_offline_v12') || '[]');
             const hoy = new Date().toLocaleDateString();
             let idx = db.findIndex(h => h.eco === carga.eco && h.fecha === hoy);
-            if(idx > -1) db[idx].danos.push(res);
-            else db.push({ fecha: hoy, insp: carga.insp, op: carga.op, eco: carga.eco, danos: [res] });
+            if(idx > -1) { db[idx].danos.push(res); }
+            else { db.push({ fecha: hoy, insp: carga.insp, op: carga.op, eco: carga.eco, danos: [res] }); }
             localStorage.setItem('autolog_offline_v12', JSON.stringify(db));
-            if(!silencioso) alert("Capturado");
+            if(!silencioso) alert("✅ Daño Capturado");
             p="00"; d="00"; s="0"; document.getElementById('comentarios').value = ""; act(); generarGrillas();
         }
 
@@ -178,22 +209,39 @@
             ir('scr-vin');
         }
 
+        function toggleNota(el) {
+            const box = el.nextElementSibling;
+            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+        }
+
         function mostrarHistorial() {
+            const query = document.getElementById('buscador').value.toLowerCase();
             const cont = document.getElementById('lista-cargas'); cont.innerHTML = "";
             let db = JSON.parse(localStorage.getItem('autolog_offline_v12') || '[]');
             db.reverse().forEach(c => {
-                let htmlVins = "";
-                const agrupados = {};
-                c.danos.forEach(d => { if(!agrupados[d.vin]) agrupados[d.vin] = []; agrupados[d.vin].push(d); });
-                for(let v in agrupados) {
-                    let dHtml = agrupados[v].map(d => `<div class="damage-line"><b>${d.cod}</b> ${d.nota ? '*' : ''} <small>(S:${d.sev})</small></div>`).join('');
-                    htmlVins += `<div class="vin-header">VIN: ${v}</div>${dHtml}`;
+                if(c.eco.toLowerCase().includes(query) || c.op.toLowerCase().includes(query)) {
+                    let htmlVins = "";
+                    const agrupados = {};
+                    c.danos.forEach(d => { if(!agrupados[d.vin]) agrupados[d.vin] = []; agrupados[d.vin].push(d); });
+                    for(let v in agrupados) {
+                        agrupados[v].sort((a,b) => b.sev - a.sev);
+                        let dHtml = agrupados[v].map(d => `
+                            <div class="damage-line">
+                                <div class="code-row" onclick="${d.nota ? 'toggleNota(this)' : ''}">
+                                    <span><b>${d.cod}</b> ${d.nota ? '<span class="asterisk">*</span>' : ''}</span>
+                                    <span style="color:var(--gray);font-size:11px">S:${d.sev}</span>
+                                </div>
+                                <div class="comment-box">📝 ${d.nota}</div>
+                            </div>
+                        `).join('');
+                        htmlVins += `<div class="vin-header">VIN: ${v}</div>${dHtml}`;
+                    }
+                    cont.innerHTML += `<div class="load-card"><b>ECO: ${c.eco}</b> | ${c.fecha}<br><small>Op: ${c.op}</small><br>${htmlVins}</div>`;
                 }
-                cont.innerHTML += `<div class="load-card"><b>ECO: ${c.eco}</b> | ${c.fecha}<br>${htmlVins}</div>`;
             });
         }
 
-        function confirmarSalida(dest) { if(confirm("¿Desea cerrar esta sesión?")) ir(dest); }
+        function confirmarSalida(dest) { if(confirm("¿Desea cerrar esta sesión de carga?")) ir(dest); }
     </script>
 </body>
 </html>
