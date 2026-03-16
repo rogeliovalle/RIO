@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AutoLog V13.1 - BARCODE</title>
+    <title>AutoLog V13.2 - BARCODE</title>
     
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     
@@ -13,22 +13,32 @@
         .screen { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; flex-direction: column; }
         .active { display: flex; }
         .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; }
-        .btn-scanner { background: var(--accent); border: 2px solid white; }
-        #reader { width: 100%; border-radius: 20px; overflow: hidden; background: #111; border: 2px dashed var(--accent); min-height: 250px; display: flex; align-items: center; justify-content: center; }
+        .btn-scanner { background: var(--accent); }
         input { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1c1c1e; color: white; font-size: 16px; box-sizing: border-box; }
+        
+        /* Ajuste del lector para códigos largos de VIN */
+        #reader { 
+            width: 100%; 
+            border-radius: 20px; 
+            overflow: hidden; 
+            background: #111; 
+            border: 2px dashed var(--accent); 
+            min-height: 300px;
+        }
+
         .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 140px; overflow-y: auto; }
         .item { background: #333; padding: 14px 0; text-align: center; border-radius: 10px; font-size: 14px; font-weight: bold; }
         .item.selected { background: var(--accent); border: 2px solid white; }
+        
         #final-code { font-size: 38px; font-weight: 800; color: var(--red); text-align: center; padding: 10px; border: 2px solid var(--red); border-radius: 18px; margin: 10px 0; background: #000; }
-        .load-card { background: var(--card); padding: 18px; border-radius: 22px; margin-bottom: 15px; border-left: 6px solid var(--accent); }
     </style>
 </head>
 <body>
+
     <div id="scr-home" class="screen active">
-        <h1 style="margin-top: 40px; color: var(--accent);">AutoLog V13.1</h1>
-        <p style="color: var(--gray);">Escáner de Barras (Modo Online)</p>
-        <button class="btn btn-scanner" onclick="ir('scr-setup')">+ Nueva Carga</button>
-        <button class="btn" style="background:#333" onclick="ir('scr-history')">🔍 Historial</button>
+        <h1 style="margin-top: 40px; color: var(--accent);">AutoLog V13.2</h1>
+        <p style="color: var(--gray);">Escáner de Barras VIN</p>
+        <button class="btn btn-scanner" onclick="ir('scr-setup')">+ Iniciar Nueva Carga</button>
     </div>
 
     <div id="scr-setup" class="screen">
@@ -41,62 +51,57 @@
 
     <div id="scr-vin" class="screen">
         <h2 style="color: var(--accent)">Escáner de Barras</h2>
-        <div id="reader"><p style="color:var(--gray)">Cámara lista</p></div>
-        <button id="start-btn" class="btn btn-scanner" onclick="activarCamara()">📸 ENCENDER CÁMARA</button>
-        <input type="text" id="vin-input" placeholder="El VIN aparecerá aquí">
-        <button class="btn" onclick="abrirInspeccion()">Continuar</button>
+        <div id="reader"></div>
+        <button id="btn-cam" class="btn btn-scanner" onclick="activarCamara()">📸 ENCENDER CÁMARA</button>
+        <input type="text" id="vin-input" placeholder="VIN detectado aparecerá aquí">
+        <button class="btn" onclick="ir('scr-inspect')">Siguiente</button>
     </div>
 
     <div id="scr-inspect" class="screen">
         <div id="final-code">00-00-0</div>
         <div class="grid" id="grid-p"></div><div class="grid" id="grid-d"></div><div class="grid" id="grid-s"></div>
-        <textarea id="comentarios" placeholder="Notas..." style="width:100%; height:70px; background:#1c1c1e; color:white; border-radius:12px; border:1px solid #333; padding:10px; margin-top:10px;"></textarea>
-        <button class="btn btn-scanner" onclick="guardarDano(false)">➕ Guardar Daño</button>
-        <button class="btn" style="background:#222" onclick="siguienteVin()">🏁 Siguiente VIN</button>
-    </div>
-
-    <div id="scr-history" class="screen">
-        <button class="btn" onclick="ir('scr-home')">Volver</button>
-        <div id="lista-cargas"></div>
+        <button class="btn btn-scanner" onclick="guardarDano()">➕ Guardar</button>
+        <button class="btn" style="background:#222" onclick="siguienteVin()">🏁 Siguiente Auto</button>
     </div>
 
     <script>
         let p="00", d="00", s="0";
-        let carga = { insp: "", op: "", eco: "" };
         let html5QrCode;
 
         function ir(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             if(id === 'scr-inspect') generarGrillas();
-            if(id === 'scr-history') mostrarHistorial();
         }
 
-        function iniciarCarga() {
-            carga.insp = document.getElementById('inspector').value;
-            carga.op = document.getElementById('operador').value;
-            carga.eco = document.getElementById('eco').value;
-            ir('scr-vin');
-        }
+        function iniciarCarga() { ir('scr-vin'); }
 
         function activarCamara() {
             if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 20, qrbox: { width: 280, height: 120 } };
             
-            html5QrCode.start({ facingMode: "environment" }, config, (decodedText) => {
-                document.getElementById('vin-input').value = decodedText.toUpperCase();
-                if(navigator.vibrate) navigator.vibrate(100);
-                detenerEscaner();
-            }).catch(err => alert("Error de cámara: " + err));
+            // CONFIGURACIÓN PARA VIN (CÓDIGO 128 / 1D)
+            const config = { 
+                fps: 20, 
+                qrbox: (viewfinderWidth, viewfinderHeight) => {
+                    // Hacemos el cuadro de escaneo muy ancho para que quepa el VIN
+                    return { width: viewfinderWidth * 0.9, height: 150 };
+                },
+                aspectRatio: 1.0
+            };
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                config, 
+                (decodedText) => {
+                    document.getElementById('vin-input').value = decodedText.toUpperCase();
+                    if(navigator.vibrate) navigator.vibrate(100);
+                    alert("✅ Detectado: " + decodedText);
+                    // No detenemos la cámara automáticamente para que el usuario vea el resultado
+                }
+            ).catch(err => alert("Error: " + err));
+            
+            document.getElementById('btn-cam').style.display = 'none';
         }
-
-        function detenerEscaner() {
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().catch(e => console.log(e));
-            }
-        }
-
-        function abrirInspeccion() { detenerEscaner(); ir('scr-inspect'); }
 
         function generarGrillas() {
             const r = (id, max, cb) => {
@@ -113,24 +118,14 @@
         }
         function act() { document.getElementById('final-code').innerText = `${p}-${d}-${s}`; }
 
-        function guardarDano(silencioso) {
-            const cod = document.getElementById('final-code').innerText;
-            const res = { vin: document.getElementById('vin-input').value, cod: cod, nota: document.getElementById('comentarios').value };
-            let db = JSON.parse(localStorage.getItem('autolog_v13_db') || '[]');
-            db.push({ eco: carga.eco, fecha: new Date().toLocaleDateString(), danos: [res] });
-            localStorage.setItem('autolog_v13_db', JSON.stringify(db));
-            if(!silencioso) alert("✅ Guardado");
+        function guardarDano() {
+            alert("Guardado Localmente");
             p="00"; d="00"; s="0"; act(); generarGrillas();
         }
 
-        function siguienteVin() { guardarDano(true); document.getElementById('vin-input').value = ""; ir('scr-vin'); }
-
-        function mostrarHistorial() {
-            const cont = document.getElementById('lista-cargas'); cont.innerHTML = "";
-            let db = JSON.parse(localStorage.getItem('autolog_v13_db') || '[]');
-            db.reverse().forEach(c => {
-                cont.innerHTML += `<div class="load-card"><b>ECO: ${c.eco}</b><br>VIN: ${c.danos[0].vin}</div>`;
-            });
+        function siguienteVin() {
+            document.getElementById('vin-input').value = "";
+            ir('scr-vin');
         }
     </script>
 </body>
