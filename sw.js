@@ -1,4 +1,4 @@
-const CACHE_NAME = 'autolog-v13.1-barcode';
+const CACHE_NAME = 'autolog-v13-barcode';
 const assets = [
   './',
   './index.html',
@@ -6,12 +6,14 @@ const assets = [
 ];
 
 self.addEventListener('install', e => {
-  self.skipWaiting(); // Fuerza a la nueva versión a activarse
+  self.skipWaiting(); // Esto obliga a la nueva versión a instalarse de inmediato
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(assets))
   );
 });
 
 self.addEventListener('fetch', e => {
-  e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
+  e.respondWith(
+    caches.match(e.request).then(res => res || fetch(e.request))
+  );
 });
