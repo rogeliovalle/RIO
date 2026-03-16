@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AutoLog V13.1 - BARCODE</title>
-    <link rel="manifest" href="manifest.json">
+    
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    
     <style>
         :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --accent: #BF5AF2; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; }
@@ -25,9 +26,9 @@
 <body>
     <div id="scr-home" class="screen active">
         <h1 style="margin-top: 40px; color: var(--accent);">AutoLog V13.1</h1>
-        <p style="color: var(--gray);">Escáner de Barras (Modo Offline)</p>
+        <p style="color: var(--gray);">Escáner de Barras (Modo Online)</p>
         <button class="btn btn-scanner" onclick="ir('scr-setup')">+ Nueva Carga</button>
-        <button class="btn" style="background:#333" onclick="ir('scr-history')">🔍 Historial V13</button>
+        <button class="btn" style="background:#333" onclick="ir('scr-history')">🔍 Historial</button>
     </div>
 
     <div id="scr-setup" class="screen">
@@ -40,9 +41,9 @@
 
     <div id="scr-vin" class="screen">
         <h2 style="color: var(--accent)">Escáner de Barras</h2>
-        <div id="reader"><p style="color:var(--gray)">Cámara lista para iniciar</p></div>
+        <div id="reader"><p style="color:var(--gray)">Cámara lista</p></div>
         <button id="start-btn" class="btn btn-scanner" onclick="activarCamara()">📸 ENCENDER CÁMARA</button>
-        <input type="text" id="vin-input" placeholder="VIN aparecerá aquí">
+        <input type="text" id="vin-input" placeholder="El VIN aparecerá aquí">
         <button class="btn" onclick="abrirInspeccion()">Continuar</button>
     </div>
 
