@@ -1,4 +1,4 @@
-const CACHE_NAME = 'autolog-v13-barcode';
+const CACHE_NAME = 'autolog-barcode-v13.1'; // Nombre nuevo = descarga nueva
 const assets = [
   './',
   './index.html',
@@ -6,7 +6,7 @@ const assets = [
 ];
 
 self.addEventListener('install', e => {
-  self.skipWaiting(); // Esto obliga a la nueva versión a instalarse de inmediato
+  self.skipWaiting(); // No esperes, actualiza ya
   e.waitUntil(
     caches.open(CACHE_NAME).then(cache => cache.addAll(assets))
   );
