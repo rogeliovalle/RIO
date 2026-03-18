@@ -3,36 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AutoLog V17.1 - Notas</title>
+    <title>AutoLog V18 - Fast Pad</title>
     <style>
         :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --green: #32D74B; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-        .screen { display: none; padding: 20px; min-height: 100vh; box-sizing: border-box; flex-direction: column; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; overflow: hidden; }
+        
+        .screen { display: none; padding: 20px; height: 100vh; box-sizing: border-box; flex-direction: column; }
         .active { display: flex; }
-        .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
+        
+        /* Botones y UI */
+        .btn { background: var(--blue); color: white; border: none; padding: 18px; border-radius: 14px; width: 100%; font-size: 17px; font-weight: 600; margin: 8px 0; cursor: pointer; }
         .btn-green { background: var(--green); color: black; }
         .btn-cancel { background: #333; color: var(--red); }
-        .btn-back { background: transparent; color: var(--blue); width: auto; padding: 10px 0; font-weight: bold; border:none; font-size: 16px; text-align: left; }
+        .btn-back { background: transparent; color: var(--blue); border:none; font-size: 16px; font-weight: bold; padding: 10px 0; text-align: left; }
+
         input, textarea { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1c1c1e; color: white; font-size: 18px; box-sizing: border-box; }
-        #vin-input { font-family: monospace; text-transform: uppercase; letter-spacing: 2px; border: 2px solid var(--blue); font-size: 22px; text-align: center; }
-        #pin-input { font-size: 32px; text-align: center; letter-spacing: 10px; border: 2px solid var(--gray); }
-        .grid-label { font-size: 12px; color: var(--gray); margin: 10px 0 5px 5px; text-transform: uppercase; }
-        .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; background: #111; padding: 12px; border-radius: 15px; max-height: 130px; overflow-y: auto; }
-        .item { background: #333; padding: 14px 0; text-align: center; border-radius: 10px; font-weight: bold; font-size: 14px; }
-        .item.selected { background: var(--blue); border: 2px solid white; }
-        #final-code { font-size: 42px; font-weight: 800; color: var(--red); text-align: center; padding: 15px; border: 2px solid var(--red); border-radius: 18px; margin: 15px 0; background: #000; }
-        .load-card { background: var(--card); padding: 18px; border-radius: 20px; margin-bottom: 15px; border-left: 5px solid var(--blue); }
-        .vin-tag { color: var(--blue); font-weight: bold; font-size: 14px; margin-top: 10px; display: block; border-top: 1px solid #333; padding-top: 5px; }
-        .history-item { font-size: 14px; padding: 6px 0; display: flex; justify-content: space-between; align-items: center; }
-        .note-display { font-size: 12px; color: var(--gray); padding-left: 10px; margin-bottom: 8px; font-style: italic; border-left: 2px solid #333; }
-        .counter { text-align: center; font-size: 14px; color: var(--gray); margin-bottom: 10px; }
+        
+        /* Pantalla Inspección: Teclado Numérico */
+        #display-code { font-size: 50px; font-weight: 800; color: var(--red); text-align: center; padding: 15px; border: 2px solid var(--red); border-radius: 18px; margin: 10px 0; background: #111; letter-spacing: 5px; }
+        .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
+        .key { background: #2C2C2E; color: white; padding: 20px; border-radius: 12px; text-align: center; font-size: 24px; font-weight: bold; border: 1px solid #444; }
+        .key:active { background: var(--blue); }
+        
+        /* Historial y Tags */
+        .load-card { background: var(--card); padding: 15px; border-radius: 18px; margin-bottom: 12px; border-left: 5px solid var(--blue); }
+        .note-tag { color: var(--red); font-weight: bold; }
+        .history-note { font-size: 13px; color: var(--gray); font-style: italic; margin-top: 5px; }
     </style>
 </head>
 <body>
 
     <div id="scr-home" class="screen active">
-        <h1 style="margin-top: 40px; font-size: 32px;">AutoLog V17.1</h1>
-        <p style="color: var(--gray);">Inspección con Comentarios</p>
+        <h1 style="margin-top: 40px; font-size: 32px;">AutoLog V18</h1>
+        <p style="color: var(--gray);">Teclado de Codificación Rápida</p>
         <div style="margin-top: auto;">
             <button class="btn" onclick="ir('scr-pin')">➕ Nueva Inspección</button>
             <button class="btn btn-cancel" style="color:white" onclick="ir('scr-history')">🔍 Ver Historial</button>
@@ -40,10 +43,10 @@
     </div>
 
     <div id="scr-pin" class="screen">
-        <button class="btn-back" onclick="ir('scr-home')">← Volver</button>
+        <button class="btn-back" onclick="ir('scr-home')">← Regresar</button>
         <div style="text-align: center; margin-top: 50px;">
-            <h2>Seguridad</h2>
-            <input type="tel" id="pin-input" maxlength="3" placeholder="***">
+            <h2>PIN de Seguridad</h2>
+            <input type="tel" id="pin-input" maxlength="3" style="font-size:40px; text-align:center; letter-spacing:10px;">
             <button class="btn" onclick="checkPin()">Entrar</button>
         </div>
     </div>
@@ -58,41 +61,50 @@
     </div>
 
     <div id="scr-vin" class="screen">
-        <button class="btn-back" onclick="ir('scr-setup')">← Datos</button>
-        <h2>VIN del Auto</h2>
-        <input type="text" id="vin-input" maxlength="17" placeholder="17 CARACTERES" oninput="actVin()">
-        <div id="vin-count" class="counter">0 / 17</div>
-        <button id="btn-inspect" class="btn" style="opacity:0.4" disabled onclick="ir('scr-inspect')">Continuar</button>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <button class="btn-back" onclick="ir('scr-setup')">← Datos</button>
+            <button class="btn-back" style="color:var(--red)" onclick="confirmarSalida()">Terminar Captura ✖</button>
+        </div>
+        <h2>VIN del Vehículo</h2>
+        <input type="text" id="vin-input" maxlength="17" placeholder="Escribir VIN..." style="text-align:center; font-family:monospace;" oninput="this.value=this.value.toUpperCase(); actVinBtn();">
+        <button id="btn-to-inspect" class="btn" style="opacity:0.4" disabled onclick="ir('scr-inspect')">Siguiente</button>
     </div>
 
     <div id="scr-inspect" class="screen">
-        <button class="btn-back" onclick="ir('scr-vin')">← VIN</button>
-        <div id="final-code">00-00-0</div>
-        <div class="grid-label">Panel</div><div class="grid" id="g-p"></div>
-        <div class="grid-label">Daño</div><div class="grid" id="g-d"></div>
-        <div class="grid-label">Severidad</div><div class="grid" id="g-s"></div>
-        <textarea id="nota" placeholder="Escribe un comentario aquí..."></textarea>
-        <button class="btn btn-green" onclick="guardarDano(false)">✅ Guardar Daño</button>
-        <button class="btn" style="background:#222; border:1px solid var(--blue)" onclick="siguienteAuto()">🏁 Siguiente Auto</button>
+        <button class="btn-back" onclick="ir('scr-vin')">← Cambiar VIN</button>
+        <div id="display-code">00-00-0</div>
+        
+        <div id="section-keypad">
+            <div class="keypad">
+                <div class="key" onclick="pressKey(1)">1</div><div class="key" onclick="pressKey(2)">2</div><div class="key" onclick="pressKey(3)">3</div>
+                <div class="key" onclick="pressKey(4)">4</div><div class="key" onclick="pressKey(5)">5</div><div class="key" onclick="pressKey(6)">6</div>
+                <div class="key" onclick="pressKey(7)">7</div><div class="key" onclick="pressKey(8)">8</div><div class="key" onclick="pressKey(9)">9</div>
+                <div class="key" style="background:#444" onclick="resetKeys()">C</div><div class="key" onclick="pressKey(0)">0</div>
+                <div class="key" style="background:var(--blue)" onclick="confirmarCodigo()">OK</div>
+            </div>
+        </div>
+
+        <div id="section-details" style="display:none;">
+            <textarea id="nota-inspeccion" placeholder="Detalles del daño..."></textarea>
+            <button class="btn btn-green" onclick="guardarDano()">✅ CAPTURAR DAÑO</button>
+            <button class="btn" style="background:#222; border:1px solid var(--blue)" onclick="siguienteVin()">🏁 SIGUIENTE VIN</button>
+        </div>
     </div>
 
     <div id="scr-history" class="screen">
         <button class="btn-back" onclick="ir('scr-home')">← Inicio</button>
-        <h2>Historial</h2>
-        <input type="text" id="search" placeholder="Buscar ECO..." onkeyup="renderHistorial()">
-        <div id="history-list" style="overflow-y:auto; flex:1; margin-top:10px;"></div>
+        <h2>Historial Local</h2>
+        <div id="history-list" style="overflow-y:auto; flex:1;"></div>
     </div>
 
     <script>
-        let p="00", d="00", s="0";
-        let session = { insp: "", op: "", eco: "" };
+        let session = { eco: "", op: "", insp: "" };
+        let currentDigits = []; // Máximo 5 dígitos
 
         function ir(id) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(id).classList.add('active');
-            if(id === 'scr-inspect') renderGrillas();
             if(id === 'scr-history') renderHistorial();
-            window.scrollTo(0,0);
         }
 
         function checkPin() {
@@ -101,109 +113,99 @@
         }
 
         function validarSetup() {
-            session.insp = document.getElementById('inspector').value;
-            session.op = document.getElementById('operador').value;
             session.eco = document.getElementById('eco').value;
-            if(!session.eco) return alert("Falta ECO");
+            session.op = document.getElementById('operador').value;
+            session.insp = document.getElementById('inspector').value;
+            if(!session.eco) return alert("ECO requerido");
             ir('scr-vin');
         }
 
-        function actVin() {
-            const input = document.getElementById('vin-input');
-            input.value = input.value.toUpperCase();
-            const len = input.value.length;
-            document.getElementById('vin-count').innerText = `${len} / 17`;
-            const btn = document.getElementById('btn-inspect');
+        function actVinBtn() {
+            const len = document.getElementById('vin-input').value.length;
+            const btn = document.getElementById('btn-to-inspect');
             btn.disabled = len !== 17;
             btn.style.opacity = len === 17 ? "1" : "0.4";
         }
 
-        function renderGrillas() {
-            const create = (id, max, callback) => {
-                const container = document.getElementById(id); container.innerHTML = "";
-                for(let i=1; i<=max; i++) {
-                    const box = document.createElement('div');
-                    box.className = 'item'; box.innerText = i;
-                    box.onclick = () => {
-                        container.querySelectorAll('.item').forEach(el => el.classList.remove('selected'));
-                        box.classList.add('selected');
-                        callback(i.toString().padStart(id==='g-s'?1:2, '0'));
-                    };
-                    container.appendChild(box);
-                }
-            };
-            create('g-p', 99, v => { p = v; updateCode(); });
-            create('g-d', 32, v => { d = v; updateCode(); });
-            create('g-s', 6, v => { s = v; updateCode(); });
+        function confirmarSalida() {
+            if(confirm("¿Estás seguro de que quieres salir a la portada? Se perderán los datos no guardados de esta carga.")) {
+                location.reload();
+            }
         }
 
-        function updateCode() { document.getElementById('final-code').innerText = `${p}-${d}-${s}`; }
+        // LÓGICA DEL TECLADO
+        function pressKey(num) {
+            if(currentDigits.length < 5) {
+                currentDigits.push(num);
+                updateDisplay();
+            }
+        }
 
-        function guardarDano(silencioso) {
-            const code = document.getElementById('final-code').innerText;
-            if(code === "00-00-0") return alert("Selecciona códigos");
+        function resetKeys() {
+            currentDigits = [];
+            document.getElementById('section-keypad').style.display = 'block';
+            document.getElementById('section-details').style.display = 'none';
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            let d = [...currentDigits];
+            while(d.length < 5) d.push(0);
+            document.getElementById('display-code').innerText = `${d[0]}${d[1]}-${d[2]}${d[3]}-${d[4]}`;
+        }
+
+        function confirmarCodigo() {
+            if(currentDigits.length < 5) return alert("Ingresa los 5 dígitos del código");
+            document.getElementById('section-keypad').style.display = 'none';
+            document.getElementById('section-details').style.display = 'block';
+        }
+
+        function guardarDano() {
+            const code = document.getElementById('display-code').innerText;
+            const nota = document.getElementById('nota-inspeccion').value;
             
             const entry = {
                 vin: document.getElementById('vin-input').value,
                 code: code,
-                nota: document.getElementById('nota').value.trim(),
-                hora: new Date().toLocaleTimeString()
+                nota: nota,
+                hora: new Date().toLocaleTimeString(),
+                fecha: new Date().toLocaleDateString()
             };
 
-            let db = JSON.parse(localStorage.getItem('autolog_db_v17') || '[]');
+            let db = JSON.parse(localStorage.getItem('autolog_v18_db') || '[]');
             let idx = db.findIndex(c => c.eco === session.eco);
             
-            if(idx > -1) { db[idx].danos.push(entry); } 
-            else { db.push({ eco: session.eco, op: session.op, insp: session.insp, fecha: new Date().toLocaleDateString(), danos: [entry] }); }
+            if(idx > -1) db[idx].danos.push(entry);
+            else db.push({ eco: session.eco, op: session.op, danos: [entry], fecha: entry.fecha });
 
-            localStorage.setItem('autolog_db_v17', JSON.stringify(db));
-            if(!silencioso) alert("✅ Guardado");
+            localStorage.setItem('autolog_v18_db', JSON.stringify(db));
+            alert("✅ Daño Capturado");
             
-            p="00"; d="00"; s="0"; updateCode(); 
-            document.getElementById('nota').value = "";
-            renderGrillas();
+            // Limpiar para el siguiente daño del mismo VIN
+            currentDigits = [];
+            document.getElementById('nota-inspeccion').value = "";
+            resetKeys();
         }
 
-        function siguienteAuto() {
-            guardarDano(true);
+        function siguienteVin() {
             document.getElementById('vin-input').value = "";
-            actVin();
+            actVinBtn();
+            resetKeys();
             ir('scr-vin');
         }
 
         function renderHistorial() {
-            const list = document.getElementById('history-list');
-            const busqueda = document.getElementById('search').value.toLowerCase();
-            list.innerHTML = "";
-            let db = JSON.parse(localStorage.getItem('autolog_db_v17') || '[]');
-
-            db.reverse().forEach(carga => {
-                if(carga.eco.toLowerCase().includes(busqueda)) {
-                    let card = `<div class="load-card">
-                        <b>ECO: ${carga.eco}</b> <span style="float:right; font-size:10px; color:var(--gray)">${carga.fecha}</span><br>
-                        <small>Operador: ${carga.op}</small>`;
-                    
-                    let vins = {};
-                    carga.danos.forEach(d => { if(!vins[d.vin]) vins[d.vin] = []; vins[d.vin].push(d); });
-
-                    for(let v in vins) {
-                        card += `<span class="vin-tag">VIN: ${v}</span>`;
-                        vins[v].forEach(d => {
-                            // Si hay nota, agregamos el asterisco al código
-                            let marcador = d.nota ? ' *' : '';
-                            card += `<div class="history-item">
-                                <span>Cod: ${d.code}<b style="color:var(--red)">${marcador}</b></span>
-                                <span style="font-size:11px; color:var(--gray)">${d.hora}</span>
-                            </div>`;
-                            // Si hay nota, la mostramos debajo
-                            if(d.nota) {
-                                card += `<div class="note-display">Nota: ${d.nota}</div>`;
-                            }
-                        });
-                    }
-                    card += `</div>`;
-                    list.innerHTML += card;
-                }
+            const list = document.getElementById('history-list'); list.innerHTML = "";
+            let db = JSON.parse(localStorage.getItem('autolog_v18_db') || '[]');
+            db.reverse().forEach(c => {
+                let card = `<div class="load-card"><b>ECO: ${c.eco}</b> <small>(${c.fecha})</small><br>`;
+                c.danos.forEach(d => {
+                    let marc = d.nota ? ' <span class="note-tag">*</span>' : '';
+                    card += `<div style="margin-top:5px; font-size:14px;">• ${d.vin} | ${d.code}${marc}</div>`;
+                    if(d.nota) card += `<div class="history-note">Nota: ${d.nota}</div>`;
+                });
+                card += `</div>`;
+                list.innerHTML += card;
             });
         }
     </script>
