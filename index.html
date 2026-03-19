@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AutoLog V18.1 - Edit Mode</title>
+    <title>AutoLog V18.2 - Validation Pro</title>
     <style>
         :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --green: #32D74B; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; overflow: hidden; }
@@ -18,37 +18,31 @@
 
         input, textarea { width: 100%; padding: 16px; margin: 10px 0; border-radius: 12px; border: 1px solid #333; background: #1c1c1e; color: white; font-size: 18px; box-sizing: border-box; }
         
-        /* Código Interactivo */
+        /* VIN Counter */
+        .vin-container { position: relative; }
+        .counter { text-align: right; font-size: 12px; color: var(--gray); margin-top: -10px; margin-bottom: 10px; }
+        .counter.complete { color: var(--green); font-weight: bold; }
+
         #display-code { 
-            font-size: 50px; 
-            font-weight: 800; 
-            color: var(--red); 
-            text-align: center; 
-            padding: 15px; 
-            border: 2px solid var(--red); 
-            border-radius: 18px; 
-            margin: 10px 0; 
-            background: #111; 
-            letter-spacing: 5px;
-            cursor: pointer; /* Indica que es clickable */
-            transition: transform 0.1s;
+            font-size: 50px; font-weight: 800; color: var(--red); text-align: center; 
+            padding: 15px; border: 2px solid var(--red); border-radius: 18px; 
+            margin: 10px 0; background: #111; letter-spacing: 5px; cursor: pointer;
         }
-        #display-code:active { transform: scale(0.95); background: #222; }
 
         .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
-        .key { background: #2C2C2E; color: white; padding: 20px; border-radius: 12px; text-align: center; font-size: 24px; font-weight: bold; border: 1px solid #444; }
+        .key { background: #2C2C2E; color: white; padding: 20px; border-radius: 12px; text-align: center; font-size: 24px; font-weight: bold; border: 1px solid #444; transition: 0.2s; }
         .key:active { background: var(--blue); }
+        .key.disabled { opacity: 0.1; pointer-events: none; } /* Para bloquear 7,8,9,0 */
         
         .load-card { background: var(--card); padding: 15px; border-radius: 18px; margin-bottom: 12px; border-left: 5px solid var(--blue); }
-        .note-tag { color: var(--red); font-weight: bold; }
         .history-note { font-size: 13px; color: var(--gray); font-style: italic; margin-top: 5px; }
     </style>
 </head>
 <body>
 
     <div id="scr-home" class="screen active">
-        <h1 style="margin-top: 40px; font-size: 32px;">AutoLog V18.1</h1>
-        <p style="color: var(--gray);">Codificación con Corrección Táctil</p>
+        <h1 style="margin-top: 40px; font-size: 32px;">AutoLog V18.2</h1>
+        <p style="color: var(--gray);">Validación de Datos y Severidad</p>
         <div style="margin-top: auto;">
             <button class="btn" onclick="ir('scr-pin')">➕ Nueva Inspección</button>
             <button class="btn btn-cancel" style="color:white" onclick="ir('scr-history')">🔍 Ver Historial</button>
@@ -67,9 +61,10 @@
     <div id="scr-setup" class="screen">
         <button class="btn-back" onclick="ir('scr-home')">← Cancelar</button>
         <h2>Configuración</h2>
-        <input type="text" id="inspector" placeholder="Inspector">
-        <input type="text" id="operador" placeholder="Operador">
-        <input type="text" id="eco" placeholder="ECO">
+        <input type="text" id="inspector" placeholder="Inspector *">
+        <input type="text" id="operador" placeholder="Operador *">
+        <input type="text" id="localidad" placeholder="Localidad *">
+        <input type="text" id="eco" placeholder="ECO *">
         <button class="btn" onclick="validarSetup()">Confirmar</button>
     </div>
 
@@ -79,7 +74,10 @@
             <button class="btn-back" style="color:var(--red)" onclick="confirmarSalida()">Terminar Captura ✖</button>
         </div>
         <h2>VIN del Vehículo</h2>
-        <input type="text" id="vin-input" maxlength="17" placeholder="Escribir VIN..." style="text-align:center; font-family:monospace;" oninput="this.value=this.value.toUpperCase(); actVinBtn();">
+        <div class="vin-container">
+            <input type="text" id="vin-input" maxlength="17" placeholder="ABC123..." style="text-align:center; font-family:monospace;" oninput="this.value=this.value.toUpperCase(); actVinBtn();">
+            <div id="vin-counter" class="counter">0 / 17</div>
+        </div>
         <button id="btn-to-inspect" class="btn" style="opacity:0.4" disabled onclick="ir('scr-inspect')">Siguiente</button>
     </div>
 
@@ -93,10 +91,10 @@
         
         <div id="section-keypad">
             <div class="keypad">
-                <div class="key" onclick="pressKey(1)">1</div><div class="key" onclick="pressKey(2)">2</div><div class="key" onclick="pressKey(3)">3</div>
-                <div class="key" onclick="pressKey(4)">4</div><div class="key" onclick="pressKey(5)">5</div><div class="key" onclick="pressKey(6)">6</div>
-                <div class="key" onclick="pressKey(7)">7</div><div class="key" onclick="pressKey(8)">8</div><div class="key" onclick="pressKey(9)">9</div>
-                <div class="key" style="background:#444" onclick="resetKeys()">C</div><div class="key" onclick="pressKey(0)">0</div>
+                <div class="key" id="k1" onclick="pressKey(1)">1</div><div class="key" id="k2" onclick="pressKey(2)">2</div><div class="key" id="k3" onclick="pressKey(3)">3</div>
+                <div class="key" id="k4" onclick="pressKey(4)">4</div><div class="key" id="k5" onclick="pressKey(5)">5</div><div class="key" id="k6" onclick="pressKey(6)">6</div>
+                <div class="key" id="k7" onclick="pressKey(7)">7</div><div class="key" id="k8" onclick="pressKey(8)">8</div><div class="key" id="k9" onclick="pressKey(9)">9</div>
+                <div class="key" style="background:#444" onclick="resetKeys()">C</div><div class="key" id="k0" onclick="pressKey(0)">0</div>
                 <div class="key" style="background:var(--blue)" onclick="confirmarCodigo()">OK</div>
             </div>
         </div>
@@ -115,7 +113,7 @@
     </div>
 
     <script>
-        let session = { eco: "", op: "", insp: "" };
+        let session = { eco: "", op: "", insp: "", loc: "" };
         let currentDigits = []; 
 
         function ir(id) {
@@ -130,36 +128,64 @@
         }
 
         function validarSetup() {
-            session.eco = document.getElementById('eco').value;
-            session.op = document.getElementById('operador').value;
-            session.insp = document.getElementById('inspector').value;
-            if(!session.eco) return alert("ECO requerido");
+            const insp = document.getElementById('inspector').value;
+            const op = document.getElementById('operador').value;
+            const loc = document.getElementById('localidad').value;
+            const eco = document.getElementById('eco').value;
+
+            if(!insp || !op || !loc || !eco) {
+                return alert("Todos los campos marcados con * son obligatorios.");
+            }
+
+            session = { insp, op, loc, eco };
             ir('scr-vin');
         }
 
         function actVinBtn() {
-            const len = document.getElementById('vin-input').value.length;
+            const val = document.getElementById('vin-input').value;
+            const len = val.length;
+            const counter = document.getElementById('vin-counter');
             const btn = document.getElementById('btn-to-inspect');
+            
+            counter.innerText = `${len} / 17`;
+            if(len === 17) counter.classList.add('complete');
+            else counter.classList.remove('complete');
+
             btn.disabled = len !== 17;
             btn.style.opacity = len === 17 ? "1" : "0.4";
         }
 
         function confirmarSalida() {
-            if(confirm("¿Seguro que quieres salir? Se perderán los datos de esta carga.")) {
-                location.reload();
-            }
+            if(confirm("¿Seguro que quieres salir?")) location.reload();
         }
 
         function pressKey(num) {
+            // Regla del 5to dígito (Severidad): Solo 1 al 6
+            if(currentDigits.length === 4) {
+                if(num < 1 || num > 6) return;
+            }
+
             if(currentDigits.length < 5) {
                 currentDigits.push(num);
                 updateDisplay();
+                updateKeypadVisuals();
+            }
+        }
+
+        function updateKeypadVisuals() {
+            const restrictedKeys = ['k7', 'k8', 'k9', 'k0'];
+            // Si vamos por el 5to dígito (ya hay 4), bloqueamos visualmente 7,8,9,0
+            if(currentDigits.length === 4) {
+                restrictedKeys.forEach(k => document.getElementById(k).classList.add('disabled'));
+            } else {
+                restrictedKeys.forEach(k => document.getElementById(k).classList.remove('disabled'));
             }
         }
 
         function resetKeys() {
             currentDigits = [];
-            editarCodigo(); // Regresa al teclado y limpia display
+            updateKeypadVisuals();
+            editarCodigo();
             updateDisplay();
         }
 
@@ -170,27 +196,24 @@
         }
 
         function confirmarCodigo() {
-            if(currentDigits.length < 5) return alert("Código incompleto (5 dígitos)");
+            if(currentDigits.length < 5) return alert("Código incompleto");
             document.getElementById('section-keypad').style.display = 'none';
             document.getElementById('section-details').style.display = 'block';
             document.getElementById('hint-edit').style.display = 'block';
         }
 
-        // --- FUNCIÓN NUEVA: VOLVER AL TECLADO SIN BORRAR ---
         function editarCodigo() {
             document.getElementById('section-keypad').style.display = 'block';
             document.getElementById('section-details').style.display = 'none';
             document.getElementById('hint-edit').style.display = 'none';
+            updateKeypadVisuals();
         }
 
         function guardarDano() {
-            const code = document.getElementById('display-code').innerText;
-            const nota = document.getElementById('nota-inspeccion').value;
-            
             const entry = {
                 vin: document.getElementById('vin-input').value,
-                code: code,
-                nota: nota,
+                code: document.getElementById('display-code').innerText,
+                nota: document.getElementById('nota-inspeccion').value,
                 hora: new Date().toLocaleTimeString(),
                 fecha: new Date().toLocaleDateString()
             };
@@ -199,23 +222,20 @@
             let idx = db.findIndex(c => c.eco === session.eco);
             
             if(idx > -1) db[idx].danos.push(entry);
-            else db.push({ eco: session.eco, op: session.op, danos: [entry], fecha: entry.fecha });
+            else db.push({ ...session, danos: [entry], fecha: entry.fecha });
 
             localStorage.setItem('autolog_v18_db', JSON.stringify(db));
-            alert("✅ Daño Guardado");
+            alert("✅ Capturado");
             
             currentDigits = [];
             document.getElementById('nota-inspeccion').value = "";
-            editarCodigo();
-            updateDisplay();
+            resetKeys();
         }
 
         function siguienteVin() {
             document.getElementById('vin-input').value = "";
             actVinBtn();
-            currentDigits = [];
-            editarCodigo();
-            updateDisplay();
+            resetKeys();
             ir('scr-vin');
         }
 
@@ -223,11 +243,11 @@
             const list = document.getElementById('history-list'); list.innerHTML = "";
             let db = JSON.parse(localStorage.getItem('autolog_v18_db') || '[]');
             db.reverse().forEach(c => {
-                let card = `<div class="load-card"><b>ECO: ${c.eco}</b> <small>(${c.fecha})</small><br>`;
+                let card = `<div class="load-card">
+                    <b>ECO: ${c.eco}</b> | ${c.loc}<br>
+                    <small>${c.fecha} - Op: ${c.op}</small><br>`;
                 c.danos.forEach(d => {
-                    let marc = d.nota ? ' <span class="note-tag">*</span>' : '';
-                    card += `<div style="margin-top:5px; font-size:14px;">• ${d.vin} | ${d.code}${marc}</div>`;
-                    if(d.nota) card += `<div class="history-note">Nota: ${d.nota}</div>`;
+                    card += `<div style="margin-top:5px; font-size:13px;">• ${d.vin} | ${d.code} ${d.nota ? '*' : ''}</div>`;
                 });
                 card += `</div>`;
                 list.innerHTML += card;
