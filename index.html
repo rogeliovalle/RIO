@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AutoLog V18.2 - Validation Pro</title>
+    <title>AutoLog V18.3 - Pro</title>
     <style>
         :root { --blue: #0A84FF; --bg: #000; --card: #1C1C1E; --red: #FF453A; --gray: #8E8E93; --green: #32D74B; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); color: #fff; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; overflow: hidden; }
@@ -32,7 +32,7 @@
         .keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 10px 0; }
         .key { background: #2C2C2E; color: white; padding: 20px; border-radius: 12px; text-align: center; font-size: 24px; font-weight: bold; border: 1px solid #444; transition: 0.2s; }
         .key:active { background: var(--blue); }
-        .key.disabled { opacity: 0.1; pointer-events: none; } /* Para bloquear 7,8,9,0 */
+        .key.disabled { opacity: 0.1; pointer-events: none; } 
         
         .load-card { background: var(--card); padding: 15px; border-radius: 18px; margin-bottom: 12px; border-left: 5px solid var(--blue); }
         .history-note { font-size: 13px; color: var(--gray); font-style: italic; margin-top: 5px; }
@@ -41,7 +41,7 @@
 <body>
 
     <div id="scr-home" class="screen active">
-        <h1 style="margin-top: 40px; font-size: 32px;">AutoLog V18.2</h1>
+        <h1 style="margin-top: 40px; font-size: 32px;">AutoLog V18.3</h1>
         <p style="color: var(--gray);">Validación de Datos y Severidad</p>
         <div style="margin-top: auto;">
             <button class="btn" onclick="ir('scr-pin')">➕ Nueva Inspección</button>
@@ -160,7 +160,6 @@
         }
 
         function pressKey(num) {
-            // Regla del 5to dígito (Severidad): Solo 1 al 6
             if(currentDigits.length === 4) {
                 if(num < 1 || num > 6) return;
             }
@@ -174,7 +173,6 @@
 
         function updateKeypadVisuals() {
             const restrictedKeys = ['k7', 'k8', 'k9', 'k0'];
-            // Si vamos por el 5to dígito (ya hay 4), bloqueamos visualmente 7,8,9,0
             if(currentDigits.length === 4) {
                 restrictedKeys.forEach(k => document.getElementById(k).classList.add('disabled'));
             } else {
@@ -182,10 +180,12 @@
             }
         }
 
+        // MODIFICADO: Ahora borra uno por uno
         function resetKeys() {
-            currentDigits = [];
+            if (currentDigits.length > 0) {
+                currentDigits.pop(); // Elimina solo el último dígito
+            }
             updateKeypadVisuals();
-            editarCodigo();
             updateDisplay();
         }
 
@@ -229,13 +229,21 @@
             
             currentDigits = [];
             document.getElementById('nota-inspeccion').value = "";
-            resetKeys();
+            resetKeys_Full(); // Limpiamos todo para el siguiente daño
+        }
+
+        // Función auxiliar para limpieza total después de guardar
+        function resetKeys_Full() {
+            currentDigits = [];
+            updateKeypadVisuals();
+            editarCodigo();
+            updateDisplay();
         }
 
         function siguienteVin() {
             document.getElementById('vin-input').value = "";
             actVinBtn();
-            resetKeys();
+            resetKeys_Full();
             ir('scr-vin');
         }
 
